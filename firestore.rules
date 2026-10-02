@@ -22,7 +22,8 @@ service cloud.firestore {
         && d.name is string && d.name.size() > 0 && d.name.size() <= 60
         && d.cardId in ['csr', 'csp', 'plat', 'vx', 'venture', 'gold', 'fu', 'flex', 'savor']
         && d.link is string
-        && (d.link.matches('^https://[^\\s<>"\']{4,292}$') || d.link.matches('^[A-Za-z0-9_-]{3,40}$'))
+        && d.link.size() <= 300
+        && (d.link.matches('^https://[^ <>]{4,292}$') || d.link.matches('^[A-Za-z0-9_-]{3,40}$'))
         && (!('note' in d) || (d.note is string && d.note.size() <= 280))
         && d.createdAt == request.time;
     }

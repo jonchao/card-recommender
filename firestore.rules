@@ -1,0 +1,35 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Card Picker referrals. All data lives under sites/{passcode}/referrals.
+    // Only the path whose {code} matches config/access.code can be read or written,
+    // so seeing and sharing referrals both need the passcode.
+    match /sites/{code}/referrals/{refId} {
+      allow read: if okCode(code);
+      allow create: if okCode(code) && validReferral(request.resource.data);
+      // Entries can't be edited or removed from the site; clean up in the Firebase console.
+      allow update, delete: if false;
+    }
+
+    function okCode(code) {
+      // string() so a passcode saved as a number (e.g. 1234) still matches what visitors type
+      return code == string(get(/databases/$(database)/documents/config/access).data.code);
+    }
+
+    function validReferral(d) {
+      return d.keys().hasOnly(['name', 'cardId', 'link', 'note', 'createdAt'])
+        && d.keys().hasAll(['name', 'cardId', 'link', 'createdAt'])
+        && d.name is string && d.name.size() > 0 && d.name.size() <= 60
+        && d.cardId in ['csr', 'csp', 'plat', 'vx', 'venture', 'gold', 'fu', 'flex', 'savor']
+        && d.link is string
+        && (d.link.matches('^https://[^\\s<>"\']{4,292}$') || d.link.matches('^[A-Za-z0-9_-]{3,40}$'))
+        && (!('note' in d) || (d.note is string && d.note.size() <= 280))
+        && d.createdAt == request.time;
+    }
+
+    // Everything else, including config/access, is closed to visitors.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

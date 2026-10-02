@@ -1,0 +1,770 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Card Picker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: quiz column + sticky results ledger on desktop; stacked with a bottom "top pick" bar on phones. */
+:root {
+  --bg: #eef1f6;
+  --surface: #ffffff;
+  --sunken: #e4e8f0;
+  --ink: #141823;
+  --muted: #5a6478;
+  --line: #d6dbe5;
+  --accent: #2443d6;
+  --accent-ink: #ffffff;
+  --accent-soft: #e2e7fb;
+  --use: #1d8a58;
+  --use-soft: #dcf1e6;
+  --maybe: #a86b0c;
+  --maybe-soft: #f7ebd2;
+  --no: #b8402c;
+  --no-soft: #f6e0dc;
+  --shadow: 0 1px 2px rgba(20, 24, 35, .06), 0 6px 20px rgba(20, 24, 35, .06);
+  --f-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Public Sans", -apple-system, "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1017; --surface: #161a24; --sunken: #1d2230; --ink: #e7eaf2; --muted: #98a1b5; --line: #2a3142;
+    --accent: #8299ff; --accent-ink: #0d1017; --accent-soft: #232c4d;
+    --use: #4cc58b; --use-soft: #173327; --maybe: #e2b053; --maybe-soft: #352a14; --no: #f07b65; --no-soft: #3a1f1a;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 6px 20px rgba(0, 0, 0, .25);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1017; --surface: #161a24; --sunken: #1d2230; --ink: #e7eaf2; --muted: #98a1b5; --line: #2a3142;
+  --accent: #8299ff; --accent-ink: #0d1017; --accent-soft: #232c4d;
+  --use: #4cc58b; --use-soft: #173327; --maybe: #e2b053; --maybe-soft: #352a14; --no: #f07b65; --no-soft: #3a1f1a;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 6px 20px rgba(0, 0, 0, .25);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 15px/1.55 var(--f-body);
+  padding-inline: 16px; padding-block: env(safe-area-inset-top, 0px) calc(env(safe-area-inset-bottom, 0px) + 24px);
+}
+[hidden] { display: none !important; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; letter-spacing: -.01em; }
+button, input, select, textarea { font: inherit; color: inherit; }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.wrap { max-width: 1180px; margin: 0 auto; }
+
+/* ---------- lock ---------- */
+.lock { min-height: 92vh; display: grid; place-items: center; }
+.lock-box { width: 100%; max-width: 380px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 28px 24px; box-shadow: var(--shadow); display: grid; gap: 14px; }
+.lock-box h1 { font-size: 28px; }
+.lock-box p { margin: 0; color: var(--muted); }
+.lock-row { display: flex; gap: 8px; }
+.lock-row input { flex: 1; min-width: 0; }
+.err { color: var(--no); font-size: 13px; min-height: 1.2em; margin: 0; }
+.stack-deck { display: flex; gap: 6px; }
+
+/* ---------- inputs & buttons ---------- */
+input[type=text], input[type=password], input[type=url], select, textarea {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; width: 100%;
+}
+textarea { resize: vertical; min-height: 64px; }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 8px 14px; cursor: pointer; font-weight: 600; font-size: 14px; white-space: nowrap; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.ghost { background: transparent; }
+.btn.small { padding: 5px 10px; font-size: 13px; }
+.btn:disabled { opacity: .55; cursor: default; }
+
+/* ---------- header & tabs ---------- */
+header.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-block: 20px 14px; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand h1 { font-size: 26px; }
+.brand .sub { color: var(--muted); font-size: 13px; }
+.tabs { display: flex; gap: 4px; background: var(--sunken); padding: 4px; border-radius: 10px; }
+.tab { border: 0; background: transparent; padding: 7px 14px; border-radius: 7px; cursor: pointer; font-weight: 600; font-size: 14px; color: var(--muted); }
+.tab[aria-selected=true] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+.tab .count { font-family: var(--f-mono); font-size: 12px; margin-left: 4px; color: var(--accent); }
+
+/* ---------- card face swatch ---------- */
+.face { width: 38px; height: 24px; border-radius: 4px; flex: none; position: relative; box-shadow: inset 0 0 0 1px rgba(255,255,255,.14), 0 1px 2px rgba(0,0,0,.2); }
+.face::after { content: ""; position: absolute; left: 5px; top: 8px; width: 8px; height: 6px; border-radius: 1.5px; background: rgba(255, 220, 150, .75); }
+.face.lg { width: 56px; height: 35px; border-radius: 5px; }
+.face.lg::after { left: 7px; top: 12px; width: 11px; height: 9px; }
+
+/* ---------- quiz layout ---------- */
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 24px; align-items: start; }
+@media (max-width: 920px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+.intro { display: grid; gap: 10px; margin-bottom: 18px; }
+.intro p { margin: 0; color: var(--muted); max-width: 62ch; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.toolbar .label { font-size: 13px; color: var(--muted); margin-right: 2px; }
+.banner { background: var(--accent-soft); border-radius: 10px; padding: 10px 14px; font-size: 14px; display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.progress { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
+.bar { flex: 1; height: 6px; background: var(--sunken); border-radius: 99px; overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .25s; }
+
+.section { margin-top: 26px; }
+.section > h2 { font-size: 19px; display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+.section > h2 .num { font-size: 12px; color: var(--muted); font-weight: 500; }
+.perks { display: grid; gap: 8px; }
+.perk { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 13px 14px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 16px; align-items: center; }
+.perk h3 { font-family: var(--f-body); font-size: 15px; font-weight: 600; letter-spacing: 0; }
+.perk p { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+.perk .chips { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 5px; }
+.chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; background: var(--sunken); border-radius: 99px; padding: 2px 9px 2px 4px; color: var(--ink); }
+.chip .dot { width: 14px; height: 9px; border-radius: 2px; }
+.chip b { font-family: var(--f-mono); font-weight: 600; font-size: 11px; color: var(--muted); }
+@media (max-width: 560px) { .perk { grid-template-columns: minmax(0, 1fr); } }
+
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; background: var(--sunken); }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label { padding: 6px 12px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--muted); border-left: 1px solid var(--line); white-space: nowrap; }
+.seg label:first-of-type { border-left: 0; }
+.seg input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: -2px; }
+.seg input[value=use]:checked + label { background: var(--use-soft); color: var(--use); }
+.seg input[value=maybe]:checked + label { background: var(--maybe-soft); color: var(--maybe); }
+.seg input[value=no]:checked + label { background: var(--no-soft); color: var(--no); }
+.perk[data-ans=use] { border-color: color-mix(in srgb, var(--use) 45%, var(--line)); }
+.perk[data-ans=maybe] { border-color: color-mix(in srgb, var(--maybe) 45%, var(--line)); }
+
+/* ---------- results ---------- */
+.results { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 14px); display: grid; gap: 14px; max-height: calc(100vh - 28px); overflow: auto; padding-bottom: 4px; }
+@media (max-width: 920px) { .results { position: static; max-height: none; overflow: visible; } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 12px; }
+.panel > h2 { font-size: 17px; }
+.pick { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; padding-block: 10px; border-top: 1px solid var(--line); }
+.pick:first-of-type { border-top: 0; padding-top: 0; }
+.pick .rank { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.pick .name { font-weight: 600; line-height: 1.25; }
+.pick .meta { font-size: 12px; color: var(--muted); }
+.pick .net { font-family: var(--f-mono); font-weight: 600; font-size: 17px; text-align: right; }
+.pick .net small { display: block; font-size: 11px; font-weight: 500; color: var(--muted); }
+.pos { color: var(--use); } .neg { color: var(--no); }
+.pick .why { grid-column: 2 / -1; font-size: 12.5px; color: var(--muted); }
+.pick .why b { color: var(--ink); font-weight: 600; }
+.pick.top { background: var(--accent-soft); border-radius: 10px; padding: 12px; border-top: 0; }
+.pick.top .name { font-family: var(--f-display); font-size: 19px; }
+.ref-link { grid-column: 2 / -1; font-size: 12.5px; font-weight: 600; background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; text-align: left; }
+.combo { border-top: 1px solid var(--line); padding-top: 10px; display: grid; gap: 6px; }
+.combo:first-of-type { border-top: 0; padding-top: 0; }
+.combo .cards { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-weight: 600; font-size: 14px; }
+.combo .plus { color: var(--muted); font-weight: 400; }
+.combo .line { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; color: var(--muted); }
+.combo .note { font-size: 12.5px; color: var(--muted); margin: 0; }
+.empty { color: var(--muted); font-size: 14px; margin: 0; }
+.tbl-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 7px 6px; border-top: 1px solid var(--line); white-space: nowrap; }
+th { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; border-top: 0; }
+td.r, th.r { text-align: right; }
+.fine { font-size: 12px; color: var(--muted); margin: 0; }
+
+.mbar { display: none; }
+@media (max-width: 920px) {
+  .mbar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; background: var(--surface); border-top: 1px solid var(--line); padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px)); align-items: center; gap: 10px; box-shadow: 0 -4px 16px rgba(0,0,0,.08); }
+  .mbar .t { flex: 1; min-width: 0; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mbar .t b { font-size: 14px; }
+  body.quiz-tab { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 80px); }
+}
+
+/* ---------- referrals ---------- */
+.ref-head { display: flex; justify-content: space-between; align-items: end; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.ref-head p { margin: 4px 0 0; color: var(--muted); max-width: 60ch; }
+.filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.fchip { border: 1px solid var(--line); background: var(--surface); border-radius: 99px; padding: 4px 11px 4px 5px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.fchip.plain { padding-left: 11px; }
+.fchip[aria-pressed=true] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.fchip .dot { width: 16px; height: 10px; border-radius: 2px; }
+.fchip .n { font-family: var(--f-mono); font-size: 11px; opacity: .7; }
+.ref-groups { display: grid; gap: 18px; }
+.rgroup h3 { display: flex; align-items: center; gap: 10px; font-size: 17px; margin-bottom: 8px; }
+.rgroup h3 .meta { font-family: var(--f-body); font-size: 13px; font-weight: 400; color: var(--muted); }
+.rlist { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.ref { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 13px 14px; display: grid; gap: 8px; min-width: 0; }
+.ref .who { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.ref .who b { font-size: 15px; }
+.ref .who span { font-size: 12px; color: var(--muted); }
+.ref q { font-size: 13.5px; color: var(--ink); quotes: "\201C" "\201D"; }
+.ref .code { font-family: var(--f-mono); font-size: 12.5px; background: var(--sunken); border-radius: 6px; padding: 6px 8px; overflow-wrap: anywhere; }
+.ref .acts { display: flex; gap: 6px; flex-wrap: wrap; }
+.ref .acts a { text-decoration: none; }
+dialog { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink); padding: 0; width: min(460px, calc(100vw - 32px)); box-shadow: var(--shadow); }
+dialog::backdrop { background: rgba(10, 12, 20, .45); }
+dialog form { padding: 20px; display: grid; gap: 12px; }
+dialog h2 { font-size: 20px; }
+.field { display: grid; gap: 5px; font-size: 13px; font-weight: 600; }
+.field small { font-weight: 400; color: var(--muted); }
+.dlg-acts { display: flex; justify-content: flex-end; gap: 8px; }
+.notice { background: var(--maybe-soft); color: var(--ink); border-radius: 10px; padding: 10px 14px; font-size: 13.5px; }
+footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<!-- ---------- passcode gate ---------- -->
+<div class="lock" id="lock" hidden>
+  <form class="lock-box" id="lockForm" autocomplete="on">
+    <div class="stack-deck" aria-hidden="true">
+      <span class="face lg" style="background:linear-gradient(135deg,#1b2a4a,#0c1424)"></span>
+      <span class="face lg" style="background:linear-gradient(135deg,#c9ccd3,#8d929c)"></span>
+      <span class="face lg" style="background:linear-gradient(135deg,#2c3340,#151a22)"></span>
+    </div>
+    <h1>Card Picker</h1>
+    <p>Enter the passcode you were given to find your best credit card and see friends' referral links.</p>
+    <div class="lock-row">
+      <input id="lockCode" type="password" autocomplete="current-password" maxlength="60" placeholder="Passcode" aria-label="Passcode">
+      <button class="btn primary" id="lockGo" type="submit">Unlock</button>
+    </div>
+    <p class="err" id="lockErr" role="alert"></p>
+    <button class="btn ghost small" id="previewBtn" type="button" hidden>Preview without referrals</button>
+  </form>
+</div>
+
+<!-- ---------- app ---------- -->
+<div class="wrap" id="app" hidden>
+  <header class="top">
+    <div class="brand">
+      <span class="face lg" aria-hidden="true" style="background:linear-gradient(135deg,#2443d6,#13226e)"></span>
+      <div>
+        <h1>Card Picker</h1>
+        <div class="sub">Tell us which perks you'd use. We'll rank the cards.</div>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button class="tab" role="tab" id="tab-quiz" aria-controls="view-quiz" aria-selected="true">Find my card</button>
+      <button class="tab" role="tab" id="tab-refs" aria-controls="view-refs" aria-selected="false">Referrals<span class="count" id="refCount"></span></button>
+    </nav>
+  </header>
+
+  <!-- quiz -->
+  <section id="view-quiz" role="tabpanel" aria-labelledby="tab-quiz">
+    <div class="layout">
+      <div>
+        <div class="intro">
+          <div class="toolbar">
+            <span class="label">Start from a profile:</span>
+            <button class="btn small" data-preset="traveler">Frequent traveler</button>
+            <button class="btn small" data-preset="foodie">Foodie</button>
+            <button class="btn small" data-preset="simple">Keep it simple</button>
+            <button class="btn small ghost" id="clearBtn">Clear answers</button>
+          </div>
+          <div class="banner" id="exampleBanner" hidden>
+            <span>You're looking at the <b id="exampleName">Frequent traveler</b> example. Change any answer to make it yours.</span>
+            <button class="btn small" id="startFresh">Start fresh</button>
+          </div>
+          <div class="progress"><span class="num" id="progText">0 / 0</span><div class="bar"><i id="progBar"></i></div><span>answered</span></div>
+        </div>
+        <div id="quiz"></div>
+      </div>
+      <aside class="results" id="results" aria-live="polite">
+        <div class="panel">
+          <div>
+            <div class="eyebrow">Best single cards</div>
+            <h2>Your top picks</h2>
+          </div>
+          <div id="picks"></div>
+        </div>
+        <div class="panel">
+          <div>
+            <div class="eyebrow">Pair them up</div>
+            <h2>Best combos</h2>
+          </div>
+          <div id="combos"></div>
+        </div>
+        <div class="panel">
+          <h2>All cards</h2>
+          <div class="tbl-wrap"><table id="allTable"></table></div>
+          <p class="fine">Net value = estimated yearly value of the perks you'd use (Maybe counts 40%) minus the annual fee. Sign-up bonuses are not included. Card terms as of Oct 2026.</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- referrals -->
+  <section id="view-refs" role="tabpanel" aria-labelledby="tab-refs" hidden>
+    <div class="ref-head">
+      <div>
+        <div class="eyebrow">From friends</div>
+        <h2 style="font-size:24px">Referrals &amp; recommendations</h2>
+        <p>Applying through a friend's link usually earns them bonus points, at no cost to you. Check that the offer on the link is at least as good as the public one.</p>
+      </div>
+      <button class="btn primary" id="addRefBtn">Add your referral</button>
+    </div>
+    <div class="notice" id="refNotice" hidden></div>
+    <div class="filters" id="refFilters"></div>
+    <div class="ref-groups" id="refGroups"></div>
+  </section>
+
+  <footer>
+    <span>Not financial advice. Verify current terms with the issuer before applying.</span>
+    <button class="btn ghost small" id="lockBtn">Lock</button>
+  </footer>
+</div>
+
+<div class="mbar" id="mbar" hidden>
+  <div class="t" id="mbarText"></div>
+  <button class="btn primary small" id="mbarBtn">See results</button>
+</div>
+
+<dialog id="refDlg">
+  <form id="refForm" method="dialog">
+    <h2>Share your referral</h2>
+    <label class="field">Your name
+      <input type="text" id="rName" maxlength="60" autocomplete="given-name" placeholder="e.g. Jon">
+    </label>
+    <label class="field">Card
+      <select id="rCard"></select>
+    </label>
+    <label class="field">Referral link or code
+      <input type="text" id="rLink" maxlength="300" inputmode="url" placeholder="https://… or a code">
+      <small>Paste the full https:// link from the issuer's refer-a-friend page, or just the code.</small>
+    </label>
+    <label class="field">Why you recommend it <small>(optional)</small>
+      <textarea id="rNote" maxlength="280" placeholder="e.g. The lounge access paid for itself on our Japan trip."></textarea>
+    </label>
+    <p class="err" id="rErr" role="alert"></p>
+    <div class="dlg-acts">
+      <button class="btn" type="button" id="rCancel">Cancel</button>
+      <button class="btn primary" type="submit" id="rSave">Share</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script>
+(() => {
+  // Paste your Firebase project's web config here (Project settings → Your apps → Web app).
+  const firebaseConfig = {
+    apiKey: "AIzaSyAxA2VhhoQdadkaEopK2z3KqVoYIfCeub0",
+    authDomain: "credit-card-recommender-7e1ae.firebaseapp.com",
+    projectId: "credit-card-recommender-7e1ae",
+    storageBucket: "credit-card-recommender-7e1ae.firebasestorage.app",
+    messagingSenderId: "125355614764",
+    appId: "1:125355614764:web:13fc1bcce1adbef177e789"
+  };
+  const CONFIGURED = !/REPLACE_ME/.test(firebaseConfig.projectId);
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const money = (n) => (n < 0 ? "−$" : "$") + Math.abs(Math.round(n)).toLocaleString("en-US");
+  const signed = (n) => (n >= 0 ? "+" : "") + money(n);
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch (_) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch (_) {} },
+    del(k) { try { localStorage.removeItem(k); } catch (_) {} }
+  };
+
+  // ---------- cards (terms as of Oct 2026) ----------
+  const CARDS = [
+    { id: "csr", name: "Chase Sapphire Reserve", short: "Sapphire Reserve", eco: "chase", tier: "premium", fee: 795, face: "linear-gradient(135deg,#1b2a4a,#0c1424)" },
+    { id: "csp", name: "Chase Sapphire Preferred", short: "Sapphire Preferred", eco: "chase", tier: "premium", fee: 95, face: "linear-gradient(135deg,#2f63c9,#183a85)" },
+    { id: "plat", name: "Amex Platinum", short: "Platinum", eco: "amex", tier: "premium", fee: 895, face: "linear-gradient(135deg,#d3d6dc,#8b919b)" },
+    { id: "vx", name: "Capital One Venture X", short: "Venture X", eco: "c1", tier: "premium", fee: 395, face: "linear-gradient(135deg,#2c3340,#121720)" },
+    { id: "venture", name: "Capital One Venture", short: "Venture", eco: "c1", tier: "premium", fee: 95, face: "linear-gradient(135deg,#7c4a2e,#4a2716)" },
+    { id: "gold", name: "Amex Gold", short: "Gold", eco: "amex", tier: "supplemental", fee: 325, face: "linear-gradient(135deg,#e2bd6b,#a87b2c)" },
+    { id: "fu", name: "Chase Freedom Unlimited", short: "Freedom Unlimited", eco: "chase", tier: "supplemental", fee: 0, face: "linear-gradient(135deg,#5d8fe0,#2e5fb3)" },
+    { id: "flex", name: "Chase Freedom Flex", short: "Freedom Flex", eco: "chase", tier: "supplemental", fee: 0, face: "linear-gradient(135deg,#6f7fa8,#39466b)" },
+    { id: "savor", name: "Capital One Savor", short: "Savor", eco: "c1", tier: "supplemental", fee: 0, face: "linear-gradient(135deg,#a8324a,#5e1527)" }
+  ];
+  const CARD = Object.fromEntries(CARDS.map((c) => [c.id, c]));
+  const ECO = { chase: "Chase Ultimate Rewards", amex: "Amex Membership Rewards", c1: "Capital One Miles" };
+
+  // ---------- perks: offers = { card: [estimated $/yr if you use it, short detail] } ----------
+  const SECTIONS = [
+    ["travel", "Travel credits"], ["lounge", "Airport lounges"], ["dining", "Dining & delivery"],
+    ["earn", "Rewards earning"], ["protect", "Protections & status"], ["life", "Lifestyle credits"]
+  ];
+  const PERKS = [
+    { id: "travel_any", sec: "travel", label: "$300 credit on any travel purchase", desc: "Flights, hotels, parking, tolls, transit and rideshare all count automatically.", offers: { csr: [300, "$300"] } },
+    { id: "portal_credit", sec: "travel", label: "$300 credit for bookings in Capital One Travel", desc: "Only applies to flights, hotels and cars booked through the card's portal.", offers: { vx: [270, "$300"] } },
+    { id: "lux_hotel", sec: "travel", label: "Luxury hotel credits", desc: "Statement credits on prepaid stays at the issuer's luxury hotel collection. Usually two credits a year with a minimum stay.", offers: { csr: [350, "$500 The Edit"], plat: [400, "$600 Fine Hotels"] }, stack: true },
+    { id: "hotel100", sec: "travel", label: "$100 hotel credit through Chase Travel", desc: "One credit per account year on a hotel booked in Chase Travel.", offers: { csp: [90, "$100"] } },
+    { id: "airline_fee", sec: "travel", label: "$200 airline incidental fee credit", desc: "Bag fees, seat selection and inflight purchases on one airline you choose.", offers: { plat: [150, "$200"] } },
+    { id: "ge", sec: "travel", label: "Global Entry or TSA PreCheck fee credit", desc: "Up to $120 every 4 years, about $30 a year.", offers: { csr: [30, "$120"], csp: [30, "$120"], plat: [30, "$120"], vx: [30, "$120"], venture: [30, "$120"] } },
+    { id: "clear", sec: "travel", label: "CLEAR Plus membership credit", desc: "Skip to the front of airport security at airports with CLEAR lanes.", offers: { plat: [180, "$209"] } },
+
+    { id: "pp", sec: "lounge", label: "Priority Pass lounges", desc: "1,300+ partner lounges and airport restaurants worldwide.", offers: { csr: [250, "PP Select"], plat: [250, "PP Select"], vx: [250, "PP Select"] } },
+    { id: "own_lounge", sec: "lounge", label: "The issuer's flagship lounges", desc: "Sapphire Lounges, Amex Centurion Lounges, or Capital One Lounges and Landings.", offers: { csr: [120, "Sapphire"], plat: [200, "Centurion + Delta"], vx: [150, "Unlimited"], venture: [50, "2 visits/yr"] }, stack: true },
+
+    { id: "dining_earn", sec: "dining", label: "Bonus rewards at restaurants", desc: "Extra points or cash back every time you eat out or order takeout.", offers: { gold: [130, "4x"], csr: [90, "3x"], csp: [90, "3x"], fu: [70, "3%"], flex: [70, "3%"], savor: [70, "3%"] } },
+    { id: "resy", sec: "dining", label: "Resy restaurant credits", desc: "Statement credits at thousands of U.S. Resy restaurants.", offers: { plat: [300, "$400"], gold: [80, "$100"] }, stack: true },
+    { id: "excl_tables", sec: "dining", label: "$300 Sapphire Exclusive Tables dining credit", desc: "Credits at a curated list of OpenTable restaurants, split across the year.", offers: { csr: [180, "$300"] } },
+    { id: "gold_dining", sec: "dining", label: "$120 dining credit at Grubhub, Five Guys, Cheesecake Factory and more", desc: "$10 a month at a short list of partners.", offers: { gold: [90, "$120"] } },
+    { id: "dunkin", sec: "dining", label: "$84 Dunkin' credit", desc: "$7 a month at U.S. Dunkin'.", offers: { gold: [60, "$84"] } },
+    { id: "doordash", sec: "dining", label: "DoorDash DashPass and monthly promos", desc: "Free DashPass membership plus monthly DoorDash discounts.", offers: { csr: [200, "DashPass + $300"], csp: [110, "DashPass + promos"] } },
+    { id: "uber_cash", sec: "dining", label: "Uber Cash for rides and Uber Eats", desc: "Monthly Uber Cash that loads to your Uber account.", offers: { plat: [180, "$200"], gold: [100, "$120"] }, stack: true },
+
+    { id: "grocery_earn", sec: "earn", label: "Bonus rewards at grocery stores", desc: "Extra rewards at supermarkets (warehouse clubs and superstores usually excluded).", offers: { gold: [110, "4x"], savor: [75, "3%"], csp: [35, "3x online"] } },
+    { id: "flights_earn", sec: "earn", label: "Bonus points on flights booked directly with airlines", desc: "Extra points when you buy airfare on the airline's own site.", offers: { plat: [120, "5x"], csr: [90, "4x"], gold: [50, "3x"] } },
+    { id: "portal_earn", sec: "earn", label: "Big multipliers for booking in the card's travel portal", desc: "Book through Chase Travel, Amex Travel or Capital One Travel to earn more.", offers: { csr: [100, "8x"], vx: [100, "10x hotels/cars"], csp: [60, "5x"], venture: [60, "5x"], plat: [50, "5x hotels"], fu: [40, "5%"], flex: [40, "5%"], savor: [40, "5%"] } },
+    { id: "flat_earn", sec: "earn", label: "Solid rewards on everything else", desc: "A good flat rate on purchases outside bonus categories.", offers: { vx: [150, "2x"], venture: [150, "2x"], fu: [100, "1.5%"] } },
+    { id: "rotating", sec: "earn", label: "5% rotating quarterly categories", desc: "Activate each quarter for 5% back on up to $1,500 in categories like gas, Amazon or groceries.", offers: { flex: [100, "5%"] } },
+    { id: "gas_earn", sec: "earn", label: "Bonus at gas stations and EV charging", desc: "Extra points at the pump or the charger.", offers: { csp: [45, "3x"] } },
+    { id: "ent_earn", sec: "earn", label: "Bonus on streaming and entertainment", desc: "Extra rewards on streaming subscriptions, concerts, movies and events.", offers: { savor: [50, "3%"], csp: [25, "3x streaming"] } },
+    { id: "drug_earn", sec: "earn", label: "Bonus at drugstores", desc: "3% back at pharmacies like CVS and Walgreens.", offers: { fu: [20, "3%"], flex: [20, "3%"] } },
+    { id: "transfer", sec: "earn", label: "Transfer points to airline and hotel partners", desc: "Move points to programs like Hyatt, United, Aeroplan or Flying Blue for outsized award value.", offers: { csr: [300, "Chase partners"], csp: [300, "Chase partners"], plat: [300, "Amex partners"], gold: [300, "Amex partners"], vx: [300, "C1 partners"], venture: [300, "C1 partners"] } },
+
+    { id: "no_fx", sec: "protect", label: "No foreign transaction fees", desc: "Avoid the usual 3% fee on purchases abroad.", offers: { csr: [50, ""], csp: [50, ""], plat: [50, ""], gold: [50, ""], vx: [50, ""], venture: [50, ""], savor: [50, ""] } },
+    { id: "rental", sec: "protect", label: "Primary rental car insurance", desc: "Decline the rental counter's collision coverage without going through your own insurance first.", offers: { csr: [60, "Primary"], csp: [60, "Primary"], vx: [60, "Primary"] } },
+    { id: "trip_ins", sec: "protect", label: "Trip delay and cancellation insurance", desc: "Reimbursement for hotels, meals and nonrefundable costs when travel goes wrong.", offers: { csr: [90, "Best-in-class"], csp: [70, ""], plat: [60, ""], vx: [60, ""] } },
+    { id: "cell", sec: "protect", label: "Cell phone protection", desc: "Covers theft or damage when you pay your phone bill with the card.", offers: { plat: [40, ""], vx: [40, ""], flex: [40, ""] } },
+    { id: "hotel_status", sec: "protect", label: "Elite hotel status", desc: "Room upgrades, late checkout and bonus points with hotel chains.", offers: { plat: [120, "Hilton + Marriott Gold"], csr: [50, "IHG Platinum"] } },
+    { id: "car_status", sec: "protect", label: "Rental car elite status", desc: "Skip the counter and get upgrades with Hertz and others.", offers: { vx: [30, "Hertz President's Circle"], plat: [30, "Hertz, Avis, National"] } },
+
+    { id: "stubhub", sec: "life", label: "$300 StubHub and viagogo ticket credit", desc: "Credits toward concert, sports and event tickets.", offers: { csr: [200, "$300"] } },
+    { id: "apple", sec: "life", label: "Apple TV and Apple Music subscriptions", desc: "Complimentary subscriptions while you hold the card.", offers: { csr: [180, "Included"] } },
+    { id: "digital_ent", sec: "life", label: "$300 digital entertainment credit", desc: "Disney+, Hulu, ESPN+, Peacock, YouTube Premium, NYT and more.", offers: { plat: [220, "$300"] } },
+    { id: "lulu", sec: "life", label: "$300 lululemon credit", desc: "$75 a quarter at U.S. lululemon stores and online.", offers: { plat: [200, "$300"] } },
+    { id: "walmart", sec: "life", label: "Walmart+ membership", desc: "Monthly credit that covers a Walmart+ subscription.", offers: { plat: [140, "$155"] } },
+    { id: "uber_one", sec: "life", label: "Uber One membership", desc: "Credit that covers Uber One: free delivery and member pricing.", offers: { plat: [96, "$120"] } },
+    { id: "equinox", sec: "life", label: "$300 Equinox credit", desc: "Toward an Equinox club membership or the Equinox+ app.", offers: { plat: [200, "$300"] } },
+    { id: "oura", sec: "life", label: "$200 Oura Ring credit", desc: "Toward an Oura Ring purchase each year.", offers: { plat: [130, "$200"] } },
+    { id: "lyft", sec: "life", label: "$120 Lyft credit", desc: "$10 a month in Lyft ride credit.", offers: { csr: [80, "$120"] } },
+    { id: "peloton", sec: "life", label: "$120 Peloton credit", desc: "Toward a Peloton membership.", offers: { csr: [70, "$120"] } }
+  ];
+  // Perks every cardholder gets without doing anything.
+  const AUTO = [{ id: "vx_anniv", label: "10,000 anniversary miles", offers: { vx: [100, "10k miles"] } }];
+
+  const WEIGHT = { use: 1, maybe: 0.4, no: 0 };
+  const PRESETS = {
+    traveler: { name: "Frequent traveler", use: ["travel_any", "portal_credit", "pp", "own_lounge", "flights_earn", "transfer", "no_fx", "rental", "trip_ins", "ge", "dining_earn", "flat_earn", "portal_earn"], maybe: ["lux_hotel", "hotel_status", "clear", "airline_fee", "car_status", "uber_cash", "hotel100"] },
+    foodie: { name: "Foodie", use: ["dining_earn", "resy", "grocery_earn", "uber_cash", "doordash", "gold_dining", "ent_earn"], maybe: ["dunkin", "excl_tables", "flat_earn", "rotating", "transfer", "no_fx"] },
+    simple: { name: "Keep it simple", use: ["flat_earn", "dining_earn"], maybe: ["rotating", "drug_earn", "grocery_earn", "no_fx"] }
+  };
+
+  // ---------- state ----------
+  let answers = {};
+  let exampleOf = null;
+  try {
+    const saved = JSON.parse(store.get("ccr-answers") || "null");
+    if (saved && typeof saved === "object") { answers = saved.answers || {}; exampleOf = saved.exampleOf || null; }
+  } catch (_) {}
+  if (!Object.keys(answers).length && !store.get("ccr-answers")) applyPreset("traveler", true);
+  function save() { store.set("ccr-answers", JSON.stringify({ answers, exampleOf })); }
+  function applyPreset(key, quiet) {
+    const p = PRESETS[key]; answers = {};
+    PERKS.forEach((k) => { answers[k.id] = p.use.includes(k.id) ? "use" : p.maybe.includes(k.id) ? "maybe" : "no"; });
+    exampleOf = key;
+    if (!quiet) { save(); renderQuizAnswers(); update(); }
+  }
+
+  // ---------- scoring ----------
+  const w = (id) => WEIGHT[answers[id]] || 0;
+  function cardScore(cid) {
+    const c = CARD[cid]; let value = 0, offered = 0, liked = 0; const parts = [];
+    for (const p of PERKS) {
+      const o = p.offers[cid]; if (!o) continue;
+      offered++; if (answers[p.id] === "use" || answers[p.id] === "maybe") liked++;
+      const v = o[0] * w(p.id); if (v > 0) { value += v; parts.push({ label: p.label, v, detail: o[1] }); }
+    }
+    for (const a of AUTO) { const o = a.offers[cid]; if (o) { value += o[0]; parts.push({ label: a.label, v: o[0], detail: o[1], auto: true }); } }
+    parts.sort((a, b) => b.v - a.v);
+    return { card: c, value, net: value - c.fee, fit: offered ? liked / offered : 0, parts };
+  }
+  // Combined value: each perk counts once at the best card's value, except stackable credits, which add up.
+  function comboValue(ids) {
+    let v = 0;
+    for (const p of PERKS) {
+      const vals = ids.map((id) => (p.offers[id] ? p.offers[id][0] : 0));
+      v += (p.stack ? vals.reduce((a, b) => a + b, 0) : Math.max(0, ...vals)) * w(p.id);
+    }
+    for (const a of AUTO) for (const id of ids) if (a.offers[id]) v += a.offers[id][0];
+    return v;
+  }
+  const feeOf = (ids) => ids.reduce((s, id) => s + CARD[id].fee, 0);
+  function combos() {
+    const out = [];
+    for (const anchor of CARDS.filter((c) => c.tier === "premium")) {
+      let set = [anchor.id];
+      const cands = CARDS.filter((c) => c.tier === "supplemental" && c.eco === anchor.eco);
+      let added = true;
+      while (added) {
+        added = false; let best = null, bestGain = 15;
+        for (const c of cands) {
+          if (set.includes(c.id)) continue;
+          const gain = comboValue([...set, c.id]) - comboValue(set) - c.fee;
+          if (gain > bestGain) { best = c.id; bestGain = gain; }
+        }
+        if (best) { set.push(best); added = true; }
+      }
+      if (set.length > 1) out.push(set);
+    }
+    // No-fee pair for people who don't want an annual fee.
+    const nf = ["fu", "flex"]; if (comboValue(nf) - comboValue(["fu"]) > 15 && comboValue(nf) - comboValue(["flex"]) > 15) out.push(nf);
+    return out.map((ids) => {
+      const value = comboValue(ids), fee = feeOf(ids);
+      const solo = Math.max(...ids.map((id) => cardScore(id).net));
+      return { ids, value, fee, net: value - fee, lift: value - fee - solo };
+    }).filter((c) => c.lift > 0).sort((a, b) => b.net - a.net).slice(0, 3);
+  }
+
+  // ---------- quiz render ----------
+  function chip(cid, detail) {
+    const c = CARD[cid];
+    return `<span class="chip"><span class="dot" style="background:${c.face}"></span>${esc(c.short)}${detail ? ` <b>${esc(detail)}</b>` : ""}</span>`;
+  }
+  function renderQuiz() {
+    let html = "", n = 0;
+    SECTIONS.forEach(([sid, title], i) => {
+      const list = PERKS.filter((p) => p.sec === sid);
+      html += `<div class="section"><h2>${esc(title)} <span class="num">${list.length} perks</span></h2><div class="perks">`;
+      for (const p of list) {
+        n++;
+        const name = "q-" + p.id;
+        const opt = (v, t) => `<input type="radio" id="${name}-${v}" name="${name}" value="${v}"><label for="${name}-${v}">${t}</label>`;
+        html += `<div class="perk" id="perk-${p.id}">
+          <div><h3>${esc(p.label)}</h3><p>${esc(p.desc)}</p></div>
+          <div class="seg" role="radiogroup" aria-label="${esc(p.label)}">${opt("use", "Use")}${opt("maybe", "Maybe")}${opt("no", "Wouldn't use")}</div>
+          <div class="chips">${Object.entries(p.offers).map(([cid, o]) => chip(cid, o[1])).join("")}</div>
+        </div>`;
+      }
+      html += `</div></div>`;
+    });
+    $("quiz").innerHTML = html;
+    $("quiz").addEventListener("change", (e) => {
+      const t = e.target; if (!t.name || !t.name.startsWith("q-")) return;
+      answers[t.name.slice(2)] = t.value; exampleOf = null; save();
+      t.closest(".perk").dataset.ans = t.value; update();
+    });
+    renderQuizAnswers();
+  }
+  function renderQuizAnswers() {
+    for (const p of PERKS) {
+      const el = $("perk-" + p.id), a = answers[p.id];
+      el.dataset.ans = a || "";
+      el.querySelectorAll("input").forEach((i) => { i.checked = i.value === a; });
+    }
+  }
+
+  // ---------- results render ----------
+  let refs = [];
+  const refsFor = (cid) => refs.filter((r) => r.cardId === cid).length;
+  function update() {
+    const answered = PERKS.filter((p) => answers[p.id]).length;
+    $("progText").textContent = `${answered} / ${PERKS.length}`;
+    $("progBar").style.width = (answered / PERKS.length * 100) + "%";
+    $("exampleBanner").hidden = !exampleOf;
+    if (exampleOf) $("exampleName").textContent = PRESETS[exampleOf].name;
+
+    const scores = CARDS.map((c) => cardScore(c.id)).sort((a, b) => b.net - a.net || b.fit - a.fit);
+    const liked = PERKS.some((p) => answers[p.id] === "use" || answers[p.id] === "maybe");
+
+    if (!liked) {
+      $("picks").innerHTML = `<p class="empty">Mark a few perks as Use or Maybe and your best cards will show up here.</p>`;
+    } else {
+      $("picks").innerHTML = scores.slice(0, 3).map((s, i) => {
+        const top3 = s.parts.slice(0, 3).map((p) => `<b>${esc(p.label)}</b>`).join(", ");
+        const n = refsFor(s.card.id);
+        return `<div class="pick${i === 0 ? " top" : ""}">
+          <span class="face${i === 0 ? " lg" : ""}" style="background:${s.card.face}"></span>
+          <div><div class="rank">#${i + 1}</div><div class="name">${esc(s.card.name)}</div><div class="meta">${s.card.fee ? money(s.card.fee) + " fee" : "No annual fee"} · ${Math.round(s.fit * 100)}% fit</div></div>
+          <div class="net num ${s.net >= 0 ? "pos" : "neg"}">${signed(s.net)}<small>net / yr</small></div>
+          ${top3 ? `<div class="why">Driven by ${top3}.</div>` : ""}
+          ${n ? `<button class="ref-link" data-goref="${s.card.id}">${n} friend${n > 1 ? "s'" : "'s"} referral link${n > 1 ? "s" : ""} →</button>` : ""}
+        </div>`;
+      }).join("");
+    }
+
+    const cs = liked ? combos() : [];
+    $("combos").innerHTML = cs.length ? cs.map((c) => {
+      const eco = CARD[c.ids[0]].eco;
+      const note = eco === "chase" && c.ids.some((id) => id === "fu" || id === "flex") && c.ids.some((id) => id === "csr" || id === "csp")
+        ? "Move Freedom points into your Sapphire account to transfer them to airlines and hotels."
+        : eco === "c1" && c.ids.includes("savor") ? "Savor cash back can be moved into Venture miles."
+        : eco === "amex" ? "Both cards earn Membership Rewards points in one pool." : "";
+      return `<div class="combo">
+        <div class="cards">${c.ids.map((id, i) => `${i ? '<span class="plus">+</span>' : ""}<span class="face" style="background:${CARD[id].face}"></span>${esc(CARD[id].short)}`).join(" ")}</div>
+        <div class="line"><span>${c.fee ? money(c.fee) + " total fees" : "No annual fees"} · ${signed(c.lift)} vs. best single card</span><span class="num ${c.net >= 0 ? "pos" : "neg"}">${signed(c.net)}</span></div>
+        ${note ? `<p class="note">${note}</p>` : ""}
+      </div>`;
+    }).join("") : `<p class="empty">${liked ? "None of the pairings beat your top single card for these answers." : "Combos appear once you've picked some perks."}</p>`;
+
+    $("allTable").innerHTML = `<thead><tr><th>Card</th><th class="r">Fee</th><th class="r">Perks</th><th class="r">Net</th><th class="r">Fit</th></tr></thead><tbody>` +
+      scores.map((s) => `<tr><td><span style="display:inline-flex;gap:8px;align-items:center"><span class="face" style="background:${s.card.face};width:26px;height:16px"></span>${esc(s.card.short)}</span></td>
+        <td class="r num">${money(s.card.fee)}</td><td class="r num">${money(s.value)}</td>
+        <td class="r num ${s.net >= 0 ? "pos" : "neg"}">${signed(s.net)}</td><td class="r num">${Math.round(s.fit * 100)}%</td></tr>`).join("") + `</tbody>`;
+
+    const top = scores[0];
+    $("mbarText").innerHTML = liked ? `Top pick: <b>${esc(top.card.short)}</b> <span class="num ${top.net >= 0 ? "pos" : "neg"}">${signed(top.net)}</span>` : "Answer a few perks to see your top card";
+  }
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-goref]"); if (!b) return;
+    refFilter = b.dataset.goref; showTab("refs"); renderRefs(); window.scrollTo({ top: 0 });
+  });
+
+  $("quiz").parentElement.querySelectorAll("[data-preset]").forEach((b) => b.addEventListener("click", () => applyPreset(b.dataset.preset)));
+  $("clearBtn").addEventListener("click", () => { answers = {}; exampleOf = null; save(); renderQuizAnswers(); update(); });
+  $("startFresh").addEventListener("click", () => { answers = {}; exampleOf = null; save(); renderQuizAnswers(); update(); window.scrollTo({ top: 0 }); });
+  $("mbarBtn").addEventListener("click", () => $("results").scrollIntoView({ behavior: "smooth" }));
+
+  // ---------- tabs ----------
+  function showTab(t) {
+    const q = t !== "refs";
+    $("tab-quiz").setAttribute("aria-selected", q); $("tab-refs").setAttribute("aria-selected", !q);
+    $("view-quiz").hidden = !q; $("view-refs").hidden = q;
+    $("mbar").hidden = !q; document.body.classList.toggle("quiz-tab", q);
+    if (location.hash !== "#" + (q ? "quiz" : "referrals")) history.replaceState(null, "", "#" + (q ? "quiz" : "referrals"));
+  }
+  $("tab-quiz").addEventListener("click", () => showTab("quiz"));
+  $("tab-refs").addEventListener("click", () => { showTab("refs"); renderRefs(); });
+
+  // ---------- referrals ----------
+  let col = null, refFilter = "all";
+  const CODE_RE = /^[A-Za-z0-9_-]{3,40}$/;
+  const URL_RE = /^https:\/\/[^\s<>"']{4,292}$/;
+  function renderRefs() {
+    $("refCount").textContent = refs.length ? refs.length : "";
+    const counts = Object.fromEntries(CARDS.map((c) => [c.id, refsFor(c.id)]));
+    $("refFilters").innerHTML = `<button class="fchip plain" data-f="all" aria-pressed="${refFilter === "all"}">All <span class="n">${refs.length}</span></button>` +
+      CARDS.map((c) => `<button class="fchip" data-f="${c.id}" aria-pressed="${refFilter === c.id}"><span class="dot" style="background:${c.face}"></span>${esc(c.short)} <span class="n">${counts[c.id]}</span></button>`).join("");
+    const show = CARDS.filter((c) => refFilter === "all" ? counts[c.id] : c.id === refFilter);
+    if (!col) {
+      $("refGroups").innerHTML = "";
+      return;
+    }
+    if (!refs.length) {
+      $("refGroups").innerHTML = `<p class="empty">No referrals yet. If you have one of these cards, add your link so friends can use it.</p>`;
+      return;
+    }
+    $("refGroups").innerHTML = show.map((c) => {
+      const list = refs.filter((r) => r.cardId === c.id);
+      return `<div class="rgroup"><h3><span class="face" style="background:${c.face}"></span>${esc(c.name)} <span class="meta">${c.fee ? money(c.fee) + " fee" : "No annual fee"}</span></h3>
+        ${list.length ? `<div class="rlist">${list.map(refCard).join("")}</div>` : `<p class="empty">No one has shared a ${esc(c.short)} referral yet.</p>`}</div>`;
+    }).join("");
+  }
+  function refCard(r) {
+    const isUrl = URL_RE.test(r.link);
+    const date = r.createdAt ? r.createdAt.toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "";
+    return `<div class="ref">
+      <div class="who"><b>${esc(r.name)}</b><span>${esc(date)}</span></div>
+      ${r.note ? `<q>${esc(r.note)}</q>` : ""}
+      <div class="code">${esc(r.link)}</div>
+      <div class="acts">
+        <button class="btn small" data-copy="${esc(r.link)}">Copy ${isUrl ? "link" : "code"}</button>
+        ${isUrl ? `<a class="btn small primary" href="${esc(r.link)}" target="_blank" rel="noopener noreferrer nofollow">Open offer</a>` : ""}
+      </div>
+    </div>`;
+  }
+  $("refFilters").addEventListener("click", (e) => { const b = e.target.closest("[data-f]"); if (b) { refFilter = b.dataset.f; renderRefs(); } });
+  $("refGroups").addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-copy]"); if (!b) return;
+    const txt = b.dataset.copy, label = b.textContent;
+    try { await navigator.clipboard.writeText(txt); b.textContent = "Copied"; }
+    catch (_) { const code = b.closest(".ref").querySelector(".code"); const rg = document.createRange(); rg.selectNodeContents(code); const s = getSelection(); s.removeAllRanges(); s.addRange(rg); b.textContent = "Selected, press Copy"; }
+    setTimeout(() => { b.textContent = label; }, 1600);
+  });
+
+  $("rCard").innerHTML = CARDS.map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join("");
+  $("addRefBtn").addEventListener("click", () => {
+    $("rErr").textContent = ""; $("rCard").value = refFilter !== "all" ? refFilter : "csr";
+    const n = store.get("ccr-name"); if (n && !$("rName").value) $("rName").value = n;
+    $("refDlg").showModal(); $("rName").focus();
+  });
+  $("rCancel").addEventListener("click", () => $("refDlg").close());
+  function friendly(err) {
+    const c = err && err.code;
+    if (c === "permission-denied") return "That wasn't accepted. Check the link starts with https:// (or is a plain code), or lock and re-enter the passcode.";
+    if (c === "unavailable" || c === "deadline-exceeded") return "Couldn't reach the server. Check your connection and try again.";
+    return "Couldn't save. Please try again.";
+  }
+  $("refForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = $("rName").value.trim(), cardId = $("rCard").value, link = $("rLink").value.trim(), note = $("rNote").value.trim();
+    if (!name) return $("rErr").textContent = "Add your name so friends know whose link it is.";
+    if (!link) return $("rErr").textContent = "Paste your referral link or code.";
+    if (!URL_RE.test(link) && !CODE_RE.test(link)) return $("rErr").textContent = "Use a full link starting with https://, or a code made of letters, numbers, - or _.";
+    if (refs.some((r) => r.cardId === cardId && r.link === link)) return $("rErr").textContent = "That link is already shared for this card.";
+    if (!col) return $("rErr").textContent = "Referrals aren't connected yet. Unlock with the passcode first.";
+    $("rSave").disabled = true;
+    try {
+      await col.add({ name, cardId, link, note, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+      store.set("ccr-name", name);
+      $("rLink").value = ""; $("rNote").value = "";
+      refFilter = cardId; $("refDlg").close(); renderRefs();
+    } catch (err) { $("rErr").textContent = friendly(err); }
+    finally { $("rSave").disabled = false; }
+  });
+
+  // ---------- passcode gate: referrals live at sites/{passcode}/referrals; the rules only open the right path ----------
+  let fsdb = null, unsub = null;
+  function openApp() {
+    $("lock").hidden = true; $("app").hidden = false;
+    showTab(location.hash === "#referrals" ? "refs" : "quiz");
+    update(); renderRefs();
+  }
+  function showLock(msg) {
+    if (unsub) { unsub(); unsub = null; }
+    col = null; refs = [];
+    $("app").hidden = true; $("mbar").hidden = true; $("lock").hidden = false;
+    $("lockErr").textContent = msg || ""; $("lockGo").disabled = false;
+    setTimeout(() => $("lockCode").focus(), 0);
+  }
+  function connect(code) {
+    if (unsub) unsub();
+    $("lockGo").disabled = true; $("lockErr").textContent = "Checking…";
+    col = fsdb.collection("sites").doc(code).collection("referrals");
+    let first = true;
+    unsub = col.orderBy("createdAt", "desc").onSnapshot((snap) => {
+      refs = snap.docs.map((d) => {
+        const v = d.data() || {};
+        return {
+          id: d.id,
+          name: typeof v.name === "string" ? v.name.trim().slice(0, 60) : "",
+          cardId: CARD[v.cardId] ? v.cardId : null,
+          link: typeof v.link === "string" ? v.link.trim().slice(0, 300) : "",
+          note: typeof v.note === "string" ? v.note.trim().slice(0, 280) : "",
+          createdAt: v.createdAt && v.createdAt.toDate ? v.createdAt.toDate() : null
+        };
+      }).filter((r) => r.name && r.cardId && (URL_RE.test(r.link) || CODE_RE.test(r.link)));
+      if (first) { first = false; store.set("ccr-pass", code); openApp(); }
+      else { renderRefs(); update(); }
+    }, (err) => {
+      if (err && err.code === "permission-denied") { store.del("ccr-pass"); showLock("That passcode isn't right."); }
+      else showLock("Couldn't connect. Check your connection and try again.");
+    });
+  }
+  $("lockForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const code = $("lockCode").value.trim();
+    if (!code) return $("lockErr").textContent = "Enter the passcode.";
+    if (code.includes("/") || code === "." || code === ".." || /^__.*__$/.test(code)) return $("lockErr").textContent = "That passcode isn't right.";
+    if (!fsdb) return $("lockErr").textContent = "The site isn't connected to its database yet.";
+    connect(code);
+  });
+  $("lockBtn").addEventListener("click", () => { store.del("ccr-pass"); $("lockCode").value = ""; showLock(""); });
+  $("previewBtn").addEventListener("click", () => {
+    openApp();
+    $("refNotice").hidden = false;
+    $("refNotice").textContent = "Preview mode: Firebase isn't configured, so referrals can't load or save. Add your config in index.html to turn them on.";
+  });
+
+  renderQuiz(); update();
+  if (!CONFIGURED) {
+    showLock("Firebase isn't set up yet. Add your project config to index.html.");
+    $("lockGo").disabled = true; $("previewBtn").hidden = false;
+  } else if (!window.firebase) {
+    showLock("Couldn't load the database. Check your connection and reload the page.");
+  } else {
+    firebase.initializeApp(firebaseConfig);
+    fsdb = firebase.firestore();
+    const saved = store.get("ccr-pass");
+    if (saved) { $("lockCode").value = saved; connect(saved); } else showLock("");
+  }
+})();
+</script>
+</body>
+</html>

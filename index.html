@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap">
+<script src="app-switcher.js" defer></script>
 <style>
 /* Layout: quiz column + sticky results ledger on desktop; stacked with a bottom "top pick" bar on phones. */
 :root {
@@ -93,6 +94,12 @@ header.top { display: flex; align-items: center; justify-content: space-between;
 .brand { display: flex; align-items: center; gap: 12px; }
 .brand h1 { font-size: 26px; }
 .brand .sub { color: var(--muted); font-size: 13px; }
+/* App switcher (shared web component): icon takes the muted text color, accent on hover/focus. */
+app-switcher { color: var(--muted); --app-switcher-hover-bg: var(--accent-soft); --app-switcher-focus: var(--accent); --app-switcher-radius: 8px; }
+app-switcher:hover { color: var(--ink); }
+header.top app-switcher { order: 3; }
+header.top .tabs { order: 2; margin-left: auto; }
+app-switcher.corner { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 12px); right: 12px; z-index: 10; }
 .tabs { display: flex; gap: 4px; background: var(--sunken); padding: 4px; border-radius: 10px; }
 .tab { border: 0; background: transparent; padding: 7px 14px; border-radius: 7px; cursor: pointer; font-weight: 600; font-size: 14px; color: var(--muted); }
 .tab[aria-selected=true] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
@@ -244,6 +251,9 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
   .brand h1 { font-size: 22px; }
   .brand .face.lg { width: 44px; height: 28px; }
   .tabs { width: 100%; }
+  header.top .brand { flex: 1; min-width: 0; }
+  header.top app-switcher { order: 2; }
+  header.top .tabs { order: 3; margin-left: 0; }
   .tab { flex: 1; padding: 10px 8px; }
   .toolbar .label { flex-basis: 100%; }
   .btn { min-height: 40px; }
@@ -264,6 +274,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
 
 <!-- ---------- passcode gate ---------- -->
 <div class="lock" id="lock" hidden>
+  <app-switcher class="corner"></app-switcher>
   <form class="lock-box" id="lockForm" autocomplete="on">
     <div class="stack-deck" aria-hidden="true">
       <span class="face lg" style="background:linear-gradient(135deg,#1b2a4a,#0c1424)"></span>
@@ -295,6 +306,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
       <button class="tab" role="tab" id="tab-quiz" aria-controls="view-quiz" aria-selected="true">Find my card</button>
       <button class="tab" role="tab" id="tab-ours" aria-controls="view-ours" aria-selected="false">Our links</button>
     </nav>
+    <app-switcher></app-switcher>
   </header>
 
   <!-- quiz -->

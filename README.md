@@ -32,3 +32,7 @@ Everything lives in a single file, `index.html`, with no build step. It's hosted
 ## Updating card data
 
 Card fees and perks are in the `CARDS` and `PERKS` arrays near the top of the script in `index.html`. Each perk's `offers` map is `{ cardId: [estimated $ per year if used, "short detail"] }`. Terms were last checked **Oct 2026**.
+
+## Our referral links & sign-up bonuses
+
+`OUR_LINKS` in `index.html` holds our own referral link for each card (leave `""` to show "Link coming soon"). `OFFERS` holds each card's public sign-up bonus, copied from the issuer's card page, and `OFFERS_AS_OF` is the date shown under them. Issuer sites block in-browser fetching, so bonuses don't update by themselves: check the Chase and Amex pages (linked from each card) and edit `OFFERS` + `OFFERS_AS_OF` when they change. Amex offers vary by applicant, so they're shown as "Up to".

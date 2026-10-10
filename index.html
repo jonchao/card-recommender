@@ -219,6 +219,10 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
 .our .acts { display: flex; gap: 6px; flex-wrap: wrap; }
 .our .acts a { text-decoration: none; }
 .our .soon { font-size: 13px; color: var(--muted); margin: 0; }
+.offer { background: var(--accent-soft); border-radius: 10px; padding: 12px; display: grid; gap: 2px; }
+.offer .amt { font-family: var(--f-display); font-size: 22px; font-weight: 700; line-height: 1.15; color: var(--ink); }
+.offer .terms { font-size: 13px; color: var(--ink); }
+.offer .src { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
 .apply { display: flex; flex-wrap: wrap; gap: 6px; }
 .apply a { text-decoration: none; }
 .pick .apply { grid-column: 2 / -1; }
@@ -339,7 +343,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
       <div>
         <div class="eyebrow">From us</div>
         <h2 style="font-size:24px">Our referral links</h2>
-        <p>If one of these cards is right for you, applying through our link earns us bonus points at no cost to you. Check that the offer on the link is at least as good as the public one.</p>
+        <p>If one of these cards is right for you, applying through our link earns us bonus points at no cost to you. Bonuses below are the public offers on each issuer's site. The offer on a referral link is usually the same but can differ, so check it before you apply.</p>
       </div>
     </div>
     <div class="ours" id="oursGrid"></div>
@@ -443,6 +447,16 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     gold: ""
   };
   const ourLink = (cid) => (typeof OUR_LINKS[cid] === "string" && OUR_LINKS[cid].trim()) || "";
+  // Public sign-up bonuses from each issuer's card page. Update OFFERS_AS_OF whenever these change.
+  const OFFERS_AS_OF = "Oct 10, 2026";
+  const OFFERS = {
+    csr: { bonus: "100,000 points", terms: "after $6,000 in purchases in the first 3 months", url: "https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve" },
+    csp: { bonus: "75,000 points", terms: "after $5,000 in purchases in the first 3 months", url: "https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred" },
+    fu: { bonus: "$200 bonus", terms: "after $500 in purchases in the first 3 months", url: "https://creditcards.chase.com/cash-back-credit-cards/freedom/unlimited" },
+    flex: { bonus: "$250 bonus", terms: "after $500 in purchases in the first 3 months", url: "https://creditcards.chase.com/cash-back-credit-cards/freedom/flex" },
+    plat: { bonus: "Up to 175,000 points", terms: "after $12,000 in purchases in the first 6 months", varies: true, url: "https://www.americanexpress.com/us/credit-cards/card/platinum/" },
+    gold: { bonus: "Up to 100,000 points", terms: "after $8,000 in purchases in the first 6 months", varies: true, url: "https://www.americanexpress.com/us/credit-cards/card/gold-card/" }
+  };
   const ECO = { chase: "Chase Ultimate Rewards", amex: "Amex Membership Rewards", c1: "Capital One Miles" };
 
   // ---------- perks: offers = { card: [estimated $/yr if you use it, short detail] } ----------
@@ -593,6 +607,12 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
       const c = CARD[id], link = ourLink(id), isUrl = URL_RE.test(link);
       return `<div class="our">
         <div class="hd"><span class="face lg" style="background:${c.face}"></span><div><b>${esc(c.name)}</b><span>${c.fee ? money(c.fee) + " annual fee" : "No annual fee"}</span></div></div>
+        ${OFFERS[id] ? `<div class="offer">
+          <div class="eyebrow">Sign-up bonus</div>
+          <div class="amt">${esc(OFFERS[id].bonus)}</div>
+          <div class="terms">${esc(OFFERS[id].terms)}${OFFERS[id].varies ? ". Amex shows your exact offer before you apply" : ""}.</div>
+          <div class="src">Public offer as of ${esc(OFFERS_AS_OF)} · <a href="${esc(OFFERS[id].url)}" target="_blank" rel="noopener noreferrer">Check current offer ↗</a></div>
+        </div>` : ""}
         ${link ? `<div class="code">${esc(link)}</div>
           <div class="acts">
             ${isUrl ? `<a class="btn small primary" href="${esc(link)}" target="_blank" rel="noopener noreferrer">Apply with our link ↗</a>` : ""}

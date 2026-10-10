@@ -8,9 +8,9 @@ A passcode-protected credit card recommender. Visitors mark perks as **Use / May
 - Freedom Unlimited and Freedom Flex
 - Savor
 
-A **Referrals** tab lets anyone with the passcode share their referral link along with a short recommendation.
+An **Our links** tab lists our own referral links and each card's current sign-up bonus, grouped by bank.
 
-Everything lives in a single file, `index.html`, with no build step. It's hosted on GitHub Pages, and referrals are stored in Firestore.
+Everything lives in `index.html` (plus bank logos in `logos/`), with no build step. It's hosted on GitHub Pages; Firestore only checks the passcode.
 
 ## One-time setup
 
@@ -23,11 +23,10 @@ Everything lives in a single file, `index.html`, with no build step. It's hosted
 
 ## How the passcode works
 
-- Referrals are stored at `sites/{passcode}/referrals`. The rules only open the path whose name equals `config/access.code`.
+- On unlock, the page reads `sites/{passcode}/referrals`. The rules only open the path whose name equals `config/access.code`, so that read succeeds only with the right passcode.
 - A wrong passcode reads nothing.
-- To change the passcode, update `config/access.code`. Existing referrals stay under the old path, so either move them in the console or let people re-add theirs.
-- The quiz itself is public card info bundled in the page, so its lock is a front-end gate. The referral links are what's actually protected.
-- To remove a spam or outdated referral, delete it in the Firebase console. The site never allows edits or deletes.
+- To change the passcode, update `config/access.code`. Everyone has to enter the new one.
+- Everything shown on the site, including our referral links, is in the page code, so the passcode is a front-end gate and the public GitHub repo can be read by anyone.
 
 ## Updating card data
 
@@ -36,3 +35,5 @@ Card fees and perks are in the `CARDS` and `PERKS` arrays near the top of the sc
 ## Our referral links & sign-up bonuses
 
 `OUR_LINKS` in `index.html` holds our own referral link for each card (leave `""` to show "Link coming soon"). `OFFERS` holds each card's public sign-up bonus, copied from the issuer's card page, and `OFFERS_AS_OF` is the date shown under them. Issuer sites block in-browser fetching, so bonuses don't update by themselves: check the Chase and Amex pages (linked from each card) and edit `OFFERS` + `OFFERS_AS_OF` when they change. Amex offers vary by applicant, so they're shown as "Up to".
+
+Bank logos (`logos/chase.svg`, `logos/amex.svg`) come from Wikimedia Commons and are trademarks of their owners, used only to identify each card's issuer.

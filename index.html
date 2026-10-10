@@ -157,7 +157,6 @@ header.top { display: flex; align-items: center; justify-content: space-between;
 .pick .why b { color: var(--ink); font-weight: 600; }
 .pick.top { background: var(--accent-soft); border-radius: 10px; padding: 12px; border-top: 0; }
 .pick.top .name { font-family: var(--f-display); font-size: 19px; }
-.ref-link { grid-column: 2 / -1; font-size: 12.5px; font-weight: 600; background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; text-align: left; }
 .combo { border-top: 1px solid var(--line); padding-top: 10px; display: grid; gap: 6px; }
 .combo:first-of-type { border-top: 0; padding-top: 0; }
 .combo .cards { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-weight: 600; font-size: 14px; }
@@ -183,32 +182,7 @@ td.r, th.r { text-align: right; }
 /* ---------- referrals ---------- */
 .ref-head { display: flex; justify-content: space-between; align-items: end; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
 .ref-head p { margin: 4px 0 0; color: var(--muted); max-width: 60ch; }
-.filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
-.fchip { border: 1px solid var(--line); background: var(--surface); border-radius: 99px; padding: 4px 11px 4px 5px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
-.fchip.plain { padding-left: 11px; }
-.fchip[aria-pressed=true] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-.fchip .dot { width: 16px; height: 10px; border-radius: 2px; }
-.fchip .n { font-family: var(--f-mono); font-size: 11px; opacity: .7; }
-.ref-groups { display: grid; gap: 18px; }
-.rgroup h3 { display: flex; align-items: center; gap: 10px; font-size: 17px; margin-bottom: 8px; }
-.rgroup h3 .meta { font-family: var(--f-body); font-size: 13px; font-weight: 400; color: var(--muted); }
-.rlist { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
-.ref { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 13px 14px; display: grid; gap: 8px; min-width: 0; }
-.ref .who { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
-.ref .who b { font-size: 15px; }
-.ref .who span { font-size: 12px; color: var(--muted); }
-.ref q { font-size: 13.5px; color: var(--ink); quotes: "\201C" "\201D"; }
-.ref .code, .our .code { font-family: var(--f-mono); font-size: 12.5px; background: var(--sunken); border-radius: 6px; padding: 6px 8px; overflow-wrap: anywhere; }
-.ref .acts { display: flex; gap: 6px; flex-wrap: wrap; }
-.ref .acts a { text-decoration: none; }
-dialog { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink); padding: 0; width: min(460px, calc(100vw - 32px)); box-shadow: var(--shadow); }
-dialog::backdrop { background: rgba(10, 12, 20, .45); }
-dialog form { padding: 20px; display: grid; gap: 12px; }
-dialog h2 { font-size: 20px; }
-.field { display: grid; gap: 5px; font-size: 13px; font-weight: 600; }
-.field small { font-weight: 400; color: var(--muted); }
-.dlg-acts { display: flex; justify-content: flex-end; gap: 8px; }
-.notice { background: var(--maybe-soft); color: var(--ink); border-radius: 10px; padding: 10px 14px; font-size: 13.5px; }
+.our .code { font-family: var(--f-mono); font-size: 12.5px; background: var(--sunken); border-radius: 6px; padding: 6px 8px; overflow-wrap: anywhere; }
 footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
 /* ---------- our links ---------- */
 .ours { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
@@ -219,6 +193,17 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
 .our .acts { display: flex; gap: 6px; flex-wrap: wrap; }
 .our .acts a { text-decoration: none; }
 .our .soon { font-size: 13px; color: var(--muted); margin: 0; }
+.our .hd .nm { flex: 1; min-width: 0; }
+#oursGrid { display: grid; gap: 28px; }
+.bank h3 { display: flex; align-items: center; gap: 10px; font-size: 20px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.bank h3 .meta { font-family: var(--f-body); font-size: 13px; font-weight: 400; color: var(--muted); }
+/* Logos sit on a white badge so they read on both themes. */
+.logo { flex: none; display: inline-flex; align-items: center; justify-content: center; background: #fff; border-radius: 6px; padding: 4px 7px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
+.logo img { display: block; height: 18px; width: auto; }
+.logo.logo-amex { padding: 0; background: transparent; box-shadow: none; }
+.logo.logo-amex img { height: 30px; border-radius: 4px; }
+.bank h3 .logo img { height: 22px; }
+.bank h3 .logo.logo-amex img { height: 34px; }
 .offer { background: var(--accent-soft); border-radius: 10px; padding: 12px; display: grid; gap: 2px; }
 .offer .amt { font-family: var(--f-display); font-size: 22px; font-weight: 700; line-height: 1.15; color: var(--ink); }
 .offer .terms { font-size: 13px; color: var(--ink); }
@@ -246,11 +231,6 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
   .pick .net { font-size: 16px; }
   .col-fit { display: none; }
   th, td { padding: 8px 5px; }
-  .fchip { padding-block: 7px; }
-  .ref-head .btn { width: 100%; }
-  dialog { width: calc(100vw - 24px); max-height: calc(100dvh - 24px); overflow: auto; }
-  dialog form { padding: 16px; }
-  .dlg-acts .btn { flex: 1; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
@@ -266,7 +246,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
       <span class="face lg" style="background:linear-gradient(135deg,#2c3340,#151a22)"></span>
     </div>
     <h1>Card Picker</h1>
-    <p>Enter the passcode you were given to find your best credit card and see friends' referral links.</p>
+    <p>Enter the passcode you were given to find your best credit card and see our referral links.</p>
     <div class="lock-row">
       <input id="lockCode" type="password" autocomplete="current-password" maxlength="60" placeholder="Passcode" aria-label="Passcode">
       <button class="btn primary" id="lockGo" type="submit">Unlock</button>
@@ -289,7 +269,6 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     <nav class="tabs" role="tablist" aria-label="Sections">
       <button class="tab" role="tab" id="tab-quiz" aria-controls="view-quiz" aria-selected="true">Find my card</button>
       <button class="tab" role="tab" id="tab-ours" aria-controls="view-ours" aria-selected="false">Our links</button>
-      <button class="tab" role="tab" id="tab-refs" aria-controls="view-refs" aria-selected="false">Friends<span class="count" id="refCount"></span></button>
     </nav>
   </header>
 
@@ -346,22 +325,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
         <p>If one of these cards is right for you, applying through our link earns us bonus points at no cost to you. Bonuses below are the public offers on each issuer's site. The offer on a referral link is usually the same but can differ, so check it before you apply.</p>
       </div>
     </div>
-    <div class="ours" id="oursGrid"></div>
-  </section>
-
-  <!-- friends' referrals -->
-  <section id="view-refs" role="tabpanel" aria-labelledby="tab-refs" hidden>
-    <div class="ref-head">
-      <div>
-        <div class="eyebrow">From friends</div>
-        <h2 style="font-size:24px">Referrals &amp; recommendations</h2>
-        <p>Applying through a friend's link usually earns them bonus points, at no cost to you. Check that the offer on the link is at least as good as the public one.</p>
-      </div>
-      <button class="btn primary" id="addRefBtn">Add your referral</button>
-    </div>
-    <div class="notice" id="refNotice" hidden></div>
-    <div class="filters" id="refFilters"></div>
-    <div class="ref-groups" id="refGroups"></div>
+    <div id="oursGrid"></div>
   </section>
 
   <footer>
@@ -374,30 +338,6 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
   <div class="t" id="mbarText"></div>
   <button class="btn primary small" id="mbarBtn">See results</button>
 </div>
-
-<dialog id="refDlg">
-  <form id="refForm" method="dialog">
-    <h2>Share your referral</h2>
-    <label class="field">Your name
-      <input type="text" id="rName" maxlength="60" autocomplete="given-name" placeholder="e.g. Jon">
-    </label>
-    <label class="field">Card
-      <select id="rCard"></select>
-    </label>
-    <label class="field">Referral link or code
-      <input type="text" id="rLink" maxlength="300" inputmode="url" placeholder="https://… or a code">
-      <small>Paste the full https:// link from the issuer's refer-a-friend page, or just the code.</small>
-    </label>
-    <label class="field">Why you recommend it <small>(optional)</small>
-      <textarea id="rNote" maxlength="280" placeholder="e.g. The lounge access paid for itself on our Japan trip."></textarea>
-    </label>
-    <p class="err" id="rErr" role="alert"></p>
-    <div class="dlg-acts">
-      <button class="btn" type="button" id="rCancel">Cancel</button>
-      <button class="btn primary" type="submit" id="rSave">Share</button>
-    </div>
-  </form>
-</dialog>
 
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
@@ -601,12 +541,25 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
       ? `<a class="btn small primary" href="${esc(link)}" target="_blank" rel="noopener noreferrer">${esc(label)} ↗</a>`
       : `<button class="btn small" data-copy="${esc(link)}">Copy ${esc(CARD[cid].short)} code</button>`;
   }
+  // Our links, grouped under a header per bank.
+  const BANKS = [
+    { eco: "chase", name: "Chase", logo: "logos/chase.svg" },
+    { eco: "amex", name: "American Express", logo: "logos/amex.svg" }
+  ];
   function renderOurs() {
-    const ids = CARDS.map((c) => c.id).filter((id) => id in OUR_LINKS);
-    $("oursGrid").innerHTML = ids.map((id) => {
+    $("oursGrid").innerHTML = BANKS.map((b) => {
+      const ids = CARDS.filter((c) => c.eco === b.eco && c.id in OUR_LINKS).map((c) => c.id);
+      if (!ids.length) return "";
+      return `<section class="bank">
+        <h3><span class="logo logo-${b.eco}"><img src="${b.logo}" alt=""></span>${esc(b.name)} <span class="meta">${ids.length} card${ids.length > 1 ? "s" : ""}</span></h3>
+        <div class="ours">${ids.map((id) => ourTile(id, b)).join("")}</div>
+      </section>`;
+    }).join("");
+  }
+  function ourTile(id, b) {
       const c = CARD[id], link = ourLink(id), isUrl = URL_RE.test(link);
       return `<div class="our">
-        <div class="hd"><span class="face lg" style="background:${c.face}"></span><div><b>${esc(c.name)}</b><span>${c.fee ? money(c.fee) + " annual fee" : "No annual fee"}</span></div></div>
+        <div class="hd"><span class="face lg" style="background:${c.face}"></span><div class="nm"><b>${esc(c.name)}</b><span>${c.fee ? money(c.fee) + " annual fee" : "No annual fee"}</span></div><span class="logo logo-${b.eco}"><img src="${b.logo}" alt="${esc(b.name)}"></span></div>
         ${OFFERS[id] ? `<div class="offer">
           <div class="eyebrow">Sign-up bonus</div>
           <div class="amt">${esc(OFFERS[id].bonus)}</div>
@@ -619,7 +572,6 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
             <button class="btn small" data-copy="${esc(link)}">Copy ${isUrl ? "link" : "code"}</button>
           </div>` : `<p class="soon">Link coming soon.</p>`}
       </div>`;
-    }).join("");
   }
   function renderQuiz() {
     let html = "", n = 0;
@@ -655,8 +607,6 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
   }
 
   // ---------- results render ----------
-  let refs = [];
-  const refsFor = (cid) => refs.filter((r) => r.cardId === cid).length;
   function update() {
     const answered = PERKS.filter((p) => answers[p.id]).length;
     $("progText").textContent = `${answered} / ${PERKS.length}`;
@@ -672,14 +622,12 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     } else {
       $("picks").innerHTML = scores.slice(0, 3).map((s, i) => {
         const top3 = s.parts.slice(0, 3).map((p) => `<b>${esc(p.label)}</b>`).join(", ");
-        const n = refsFor(s.card.id);
         return `<div class="pick${i === 0 ? " top" : ""}">
           <span class="face${i === 0 ? " lg" : ""}" style="background:${s.card.face}"></span>
           <div><div class="rank">#${i + 1}</div><div class="name">${esc(s.card.name)}</div><div class="meta">${s.card.fee ? money(s.card.fee) + " fee" : "No annual fee"} · ${Math.round(s.fit * 100)}% fit</div></div>
           <div class="net num ${s.net >= 0 ? "pos" : "neg"}">${signed(s.net)}<small>net / yr</small></div>
           ${top3 ? `<div class="why">Driven by ${top3}.</div>` : ""}
           ${ourLink(s.card.id) ? `<div class="apply">${applyBtn(s.card.id, "Apply with our link")}</div>` : ""}
-          ${n ? `<button class="ref-link" data-goref="${s.card.id}">${n} friend${n > 1 ? "s'" : "'s"} referral link${n > 1 ? "s" : ""} →</button>` : ""}
         </div>`;
       }).join("");
     }
@@ -707,10 +655,6 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     const top = scores[0];
     $("mbarText").innerHTML = liked ? `Top pick: <b>${esc(top.card.short)}</b> <span class="num ${top.net >= 0 ? "pos" : "neg"}">${signed(top.net)}</span>` : "Answer a few perks to see your top card";
   }
-  document.addEventListener("click", (e) => {
-    const b = e.target.closest("[data-goref]"); if (!b) return;
-    refFilter = b.dataset.goref; showTab("refs"); renderRefs(); window.scrollTo({ top: 0 });
-  });
 
   $("quiz").parentElement.querySelectorAll("[data-preset]").forEach((b) => b.addEventListener("click", () => applyPreset(b.dataset.preset)));
   $("clearBtn").addEventListener("click", () => { answers = {}; exampleOf = null; save(); renderQuizAnswers(); update(); });
@@ -729,7 +673,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
   }
 
   // ---------- tabs ----------
-  const TABS = { quiz: "quiz", ours: "our-links", refs: "referrals" };  // tab -> URL hash
+  const TABS = { quiz: "quiz", ours: "our-links" };  // tab -> URL hash
   function showTab(t) {
     if (!TABS[t]) t = "quiz";
     for (const k of Object.keys(TABS)) { $("tab-" + k).setAttribute("aria-selected", k === t); $("view-" + k).hidden = k !== t; }
@@ -740,126 +684,42 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
   const tabFromHash = () => Object.keys(TABS).find((k) => "#" + TABS[k] === location.hash) || "quiz";
   $("tab-quiz").addEventListener("click", () => showTab("quiz"));
   $("tab-ours").addEventListener("click", () => { showTab("ours"); renderOurs(); });
-  $("tab-refs").addEventListener("click", () => { showTab("refs"); renderRefs(); });
 
-  // ---------- referrals ----------
-  let col = null, refFilter = "all";
-  const CODE_RE = /^[A-Za-z0-9_-]{3,40}$/;
+  // ---------- links ----------
   const URL_RE = /^https:\/\/[^\s<>"']{4,292}$/;
-  function renderRefs() {
-    $("refCount").textContent = refs.length ? refs.length : "";
-    const counts = Object.fromEntries(CARDS.map((c) => [c.id, refsFor(c.id)]));
-    $("refFilters").innerHTML = `<button class="fchip plain" data-f="all" aria-pressed="${refFilter === "all"}">All <span class="n">${refs.length}</span></button>` +
-      CARDS.map((c) => `<button class="fchip" data-f="${c.id}" aria-pressed="${refFilter === c.id}"><span class="dot" style="background:${c.face}"></span>${esc(c.short)} <span class="n">${counts[c.id]}</span></button>`).join("");
-    const show = CARDS.filter((c) => refFilter === "all" ? counts[c.id] : c.id === refFilter);
-    if (!col) {
-      $("refGroups").innerHTML = "";
-      return;
-    }
-    if (!refs.length) {
-      $("refGroups").innerHTML = `<p class="empty">No referrals yet. If you have one of these cards, add your link so friends can use it.</p>`;
-      return;
-    }
-    $("refGroups").innerHTML = show.map((c) => {
-      const list = refs.filter((r) => r.cardId === c.id);
-      return `<div class="rgroup"><h3><span class="face" style="background:${c.face}"></span>${esc(c.name)} <span class="meta">${c.fee ? money(c.fee) + " fee" : "No annual fee"}</span></h3>
-        ${list.length ? `<div class="rlist">${list.map(refCard).join("")}</div>` : `<p class="empty">No one has shared a ${esc(c.short)} referral yet.</p>`}</div>`;
-    }).join("");
-  }
-  function refCard(r) {
-    const isUrl = URL_RE.test(r.link);
-    const date = r.createdAt ? r.createdAt.toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "";
-    return `<div class="ref">
-      <div class="who"><b>${esc(r.name)}</b><span>${esc(date)}</span></div>
-      ${r.note ? `<q>${esc(r.note)}</q>` : ""}
-      <div class="code">${esc(r.link)}</div>
-      <div class="acts">
-        <button class="btn small" data-copy="${esc(r.link)}">Copy ${isUrl ? "link" : "code"}</button>
-        ${isUrl ? `<a class="btn small primary" href="${esc(r.link)}" target="_blank" rel="noopener noreferrer nofollow">Open offer</a>` : ""}
-      </div>
-    </div>`;
-  }
-  $("refFilters").addEventListener("click", (e) => { const b = e.target.closest("[data-f]"); if (b) { refFilter = b.dataset.f; renderRefs(); } });
   document.addEventListener("click", async (e) => {
     const b = e.target.closest("[data-copy]"); if (!b) return;
     const txt = b.dataset.copy, label = b.textContent;
     try { await navigator.clipboard.writeText(txt); b.textContent = "Copied"; }
     catch (_) {
-      const code = b.closest(".ref, .our") && b.closest(".ref, .our").querySelector(".code");
+      const code = b.closest(".our") && b.closest(".our").querySelector(".code");
       if (code) { const rg = document.createRange(); rg.selectNodeContents(code); const s = getSelection(); s.removeAllRanges(); s.addRange(rg); b.textContent = "Selected, press Copy"; }
       else b.textContent = txt;
     }
     setTimeout(() => { b.textContent = label; }, 1600);
   });
 
-  $("rCard").innerHTML = CARDS.map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join("");
-  $("addRefBtn").addEventListener("click", () => {
-    $("rErr").textContent = ""; $("rCard").value = refFilter !== "all" ? refFilter : "csr";
-    const n = store.get("ccr-name"); if (n && !$("rName").value) $("rName").value = n;
-    $("refDlg").showModal(); $("rName").focus();
-  });
-  $("rCancel").addEventListener("click", () => $("refDlg").close());
-  function friendly(err) {
-    const c = err && err.code;
-    if (c === "permission-denied") return "That wasn't accepted. Check the link starts with https:// (or is a plain code), or lock and re-enter the passcode.";
-    if (c === "unavailable" || c === "deadline-exceeded") return "Couldn't reach the server. Check your connection and try again.";
-    return "Couldn't save. Please try again.";
-  }
-  $("refForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const name = $("rName").value.trim(), cardId = $("rCard").value, link = $("rLink").value.trim(), note = $("rNote").value.trim();
-    if (!name) return $("rErr").textContent = "Add your name so friends know whose link it is.";
-    if (!link) return $("rErr").textContent = "Paste your referral link or code.";
-    if (!URL_RE.test(link) && !CODE_RE.test(link)) return $("rErr").textContent = "Use a full link starting with https://, or a code made of letters, numbers, - or _.";
-    if (refs.some((r) => r.cardId === cardId && r.link === link)) return $("rErr").textContent = "That link is already shared for this card.";
-    if (!col) return $("rErr").textContent = "Referrals aren't connected yet. Unlock with the passcode first.";
-    $("rSave").disabled = true;
-    try {
-      await col.add({ name, cardId, link, note, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-      store.set("ccr-name", name);
-      $("rLink").value = ""; $("rNote").value = "";
-      refFilter = cardId; $("refDlg").close(); renderRefs();
-    } catch (err) { $("rErr").textContent = friendly(err); }
-    finally { $("rSave").disabled = false; }
-  });
-
-  // ---------- passcode gate: referrals live at sites/{passcode}/referrals; the rules only open the right path ----------
-  let fsdb = null, unsub = null;
+  // ---------- passcode gate: the rules only open sites/{passcode}/referrals, so a read there checks the passcode ----------
+  let fsdb = null;
   function openApp() {
     $("lock").hidden = true; $("app").hidden = false;
     showTab(tabFromHash());
-    update(); renderRefs(); renderOurs();
+    update(); renderOurs();
   }
   function showLock(msg) {
-    if (unsub) { unsub(); unsub = null; }
-    col = null; refs = [];
     $("app").hidden = true; $("mbar").hidden = true; $("lock").hidden = false;
     $("lockErr").textContent = msg || ""; $("lockGo").disabled = false;
     setTimeout(() => $("lockCode").focus(), 0);
   }
-  function connect(code) {
-    if (unsub) unsub();
+  async function connect(code) {
     $("lockGo").disabled = true; $("lockErr").textContent = "Checking…";
-    col = fsdb.collection("sites").doc(code).collection("referrals");
-    let first = true;
-    unsub = col.orderBy("createdAt", "desc").onSnapshot((snap) => {
-      refs = snap.docs.map((d) => {
-        const v = d.data() || {};
-        return {
-          id: d.id,
-          name: typeof v.name === "string" ? v.name.trim().slice(0, 60) : "",
-          cardId: CARD[v.cardId] ? v.cardId : null,
-          link: typeof v.link === "string" ? v.link.trim().slice(0, 300) : "",
-          note: typeof v.note === "string" ? v.note.trim().slice(0, 280) : "",
-          createdAt: v.createdAt && v.createdAt.toDate ? v.createdAt.toDate() : null
-        };
-      }).filter((r) => r.name && r.cardId && (URL_RE.test(r.link) || CODE_RE.test(r.link)));
-      if (first) { first = false; store.set("ccr-pass", code); openApp(); }
-      else { renderRefs(); update(); }
-    }, (err) => {
+    try {
+      await fsdb.collection("sites").doc(code).collection("referrals").limit(1).get();
+      store.set("ccr-pass", code); $("lockErr").textContent = ""; openApp();
+    } catch (err) {
       if (err && err.code === "permission-denied") { store.del("ccr-pass"); showLock("That passcode isn't right."); }
       else showLock("Couldn't connect. Check your connection and try again.");
-    });
+    }
   }
   $("lockForm").addEventListener("submit", (e) => {
     e.preventDefault();
@@ -870,11 +730,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     connect(code);
   });
   $("lockBtn").addEventListener("click", () => { store.del("ccr-pass"); $("lockCode").value = ""; showLock(""); });
-  $("previewBtn").addEventListener("click", () => {
-    openApp();
-    $("refNotice").hidden = false;
-    $("refNotice").textContent = "Preview mode: Firebase isn't configured, so referrals can't load or save. Add your config in index.html to turn them on.";
-  });
+  $("previewBtn").addEventListener("click", openApp);
 
   renderQuiz(); update();
   if (!CONFIGURED) {

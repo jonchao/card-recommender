@@ -387,16 +387,24 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     gold: ""
   };
   const ourLink = (cid) => (typeof OUR_LINKS[cid] === "string" && OUR_LINKS[cid].trim()) || "";
-  // Public sign-up bonuses from each issuer's card page. Update OFFERS_AS_OF whenever these change.
-  const OFFERS_AS_OF = "Oct 10, 2026";
-  const OFFERS = {
-    csr: { bonus: "100,000 points", terms: "after $6,000 in purchases in the first 3 months", url: "https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve" },
-    csp: { bonus: "75,000 points", terms: "after $5,000 in purchases in the first 3 months", url: "https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred" },
-    fu: { bonus: "$200 bonus", terms: "after $500 in purchases in the first 3 months", url: "https://creditcards.chase.com/cash-back-credit-cards/freedom/unlimited" },
-    flex: { bonus: "$250 bonus", terms: "after $500 in purchases in the first 3 months", url: "https://creditcards.chase.com/cash-back-credit-cards/freedom/flex" },
-    plat: { bonus: "Up to 175,000 points", terms: "after $12,000 in purchases in the first 6 months", varies: true, url: "https://www.americanexpress.com/us/credit-cards/card/platinum/" },
-    gold: { bonus: "Up to 100,000 points", terms: "after $8,000 in purchases in the first 6 months", varies: true, url: "https://www.americanexpress.com/us/credit-cards/card/gold-card/" }
-  };
+  // Public sign-up bonuses live in offers.json (kept current by a daily check) and load fresh on every page open.
+  let OFFERS = {}, OFFERS_AS_OF = "", offersState = "loading";  // loading | ok | failed
+  const isText = (v, max) => typeof v === "string" && v.trim().length > 0 && v.length <= max;
+  async function loadOffers() {
+    try {
+      const r = await fetch("offers.json?t=" + Date.now(), { cache: "no-store" });
+      if (!r.ok) throw new Error(r.status);
+      const data = await r.json(), out = {};
+      for (const [id, o] of Object.entries((data && data.offers) || {})) {
+        if (CARD[id] && o && isText(o.bonus, 60) && isText(o.terms, 200) && typeof o.url === "string" && /^https:\/\/[^\s<>"']+$/.test(o.url))
+          out[id] = { bonus: o.bonus.trim(), terms: o.terms.trim(), url: o.url, varies: o.varies === true };
+      }
+      const d = /^\d{4}-\d{2}-\d{2}$/.test(data.asOf) ? new Date(data.asOf + "T12:00:00") : null;
+      OFFERS = out; OFFERS_AS_OF = d ? d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "";
+      offersState = "ok";
+    } catch (_) { offersState = "failed"; }
+    renderOurs();
+  }
   const ECO = { chase: "Chase Ultimate Rewards", amex: "Amex Membership Rewards", c1: "Capital One Miles" };
 
   // ---------- perks: offers = { card: [estimated $/yr if you use it, short detail] } ----------
@@ -564,8 +572,9 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
           <div class="eyebrow">Sign-up bonus</div>
           <div class="amt">${esc(OFFERS[id].bonus)}</div>
           <div class="terms">${esc(OFFERS[id].terms)}${OFFERS[id].varies ? ". Amex shows your exact offer before you apply" : ""}.</div>
-          <div class="src">Public offer as of ${esc(OFFERS_AS_OF)} · <a href="${esc(OFFERS[id].url)}" target="_blank" rel="noopener noreferrer">Check current offer ↗</a></div>
-        </div>` : ""}
+          <div class="src">Public offer${OFFERS_AS_OF ? " as of " + esc(OFFERS_AS_OF) : ""} · <a href="${esc(OFFERS[id].url)}" target="_blank" rel="noopener noreferrer">Check current offer ↗</a></div>
+        </div>` : offersState === "loading" ? `<div class="offer"><div class="eyebrow">Sign-up bonus</div><div class="terms">Loading the current offer…</div></div>`
+          : offersState === "failed" ? `<div class="offer"><div class="eyebrow">Sign-up bonus</div><div class="terms">Couldn't load the current offer. Reload the page to try again.</div></div>` : ""}
         ${link ? `<div class="code">${esc(link)}</div>
           <div class="acts">
             ${isUrl ? `<a class="btn small primary" href="${esc(link)}" target="_blank" rel="noopener noreferrer">Apply with our link ↗</a>` : ""}
@@ -732,7 +741,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
   $("lockBtn").addEventListener("click", () => { store.del("ccr-pass"); $("lockCode").value = ""; showLock(""); });
   $("previewBtn").addEventListener("click", openApp);
 
-  renderQuiz(); update();
+  renderQuiz(); update(); loadOffers();
   if (!CONFIGURED) {
     showLock("Firebase isn't set up yet. Add your project config to index.html.");
     $("lockGo").disabled = true; $("previewBtn").hidden = false;

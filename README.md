@@ -34,6 +34,24 @@ Card fees and perks are in the `CARDS` and `PERKS` arrays near the top of the sc
 
 ## Our referral links & sign-up bonuses
 
-`OUR_LINKS` in `index.html` holds our own referral link for each card (leave `""` to show "Link coming soon"). `OFFERS` holds each card's public sign-up bonus, copied from the issuer's card page, and `OFFERS_AS_OF` is the date shown under them. Issuer sites block in-browser fetching, so bonuses don't update by themselves: check the Chase and Amex pages (linked from each card) and edit `OFFERS` + `OFFERS_AS_OF` when they change. Amex offers vary by applicant, so they're shown as "Up to".
+`OUR_LINKS` in `index.html` holds our own referral link for each card (leave `""` to show "Link coming soon").
+
+Sign-up bonuses live in **`offers.json`**, which the page fetches fresh on every open:
+
+```json
+{ "asOf": "YYYY-MM-DD",
+  "offers": { "csr": { "bonus": "100,000 points", "terms": "after $6,000 in purchases in the first 3 months", "url": "https://...", "varies": false } } }
+```
+
+Card ids: `csr`, `csp`, `fu`, `flex`, `plat`, `gold`. `varies: true` adds "Amex shows your exact offer before you apply". `url` must be the issuer's https card page.
+
+## Automatic updates
+
+Two scheduled Claude routines keep the data current and push straight to `main` (GitHub Pages redeploys in a minute or two):
+
+- **Daily:** re-checks each card's public sign-up bonus and updates `offers.json` if anything changed.
+- **Weekly:** re-checks annual fees and perks for all 9 cards and updates `CARDS` / `PERKS` in `index.html` (and the "as of" notes), plus bonuses.
+
+Each run only commits when something actually changed, and the commit message lists what changed and the sources.
 
 Bank logos (`logos/chase.svg`, `logos/amex.svg`) come from Wikimedia Commons and are trademarks of their owners, used only to identify each card's issuer.

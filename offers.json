@@ -1,0 +1,11 @@
+{
+  "asOf": "2026-10-10",
+  "offers": {
+    "csr": { "bonus": "100,000 points", "terms": "after $6,000 in purchases in the first 3 months", "url": "https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve" },
+    "csp": { "bonus": "75,000 points", "terms": "after $5,000 in purchases in the first 3 months", "url": "https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred" },
+    "fu": { "bonus": "$200 bonus", "terms": "after $500 in purchases in the first 3 months", "url": "https://creditcards.chase.com/cash-back-credit-cards/freedom/unlimited" },
+    "flex": { "bonus": "$250 bonus", "terms": "after $500 in purchases in the first 3 months", "url": "https://creditcards.chase.com/cash-back-credit-cards/freedom/flex" },
+    "plat": { "bonus": "Up to 175,000 points", "terms": "after $12,000 in purchases in the first 6 months", "varies": true, "url": "https://www.americanexpress.com/us/credit-cards/card/platinum/" },
+    "gold": { "bonus": "Up to 100,000 points", "terms": "after $8,000 in purchases in the first 6 months", "varies": true, "url": "https://www.americanexpress.com/us/credit-cards/card/gold-card/" }
+  }
+}

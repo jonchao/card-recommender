@@ -185,7 +185,13 @@ td.r, th.r { text-align: right; }
 .our .code { font-family: var(--f-mono); font-size: 12.5px; background: var(--sunken); border-radius: 6px; padding: 6px 8px; overflow-wrap: anywhere; }
 footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
 /* ---------- our links ---------- */
-.ours { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+/* One card per row: name | bonus | link on wide screens, stacked on phones. */
+.ours { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.our .lk { display: grid; gap: 8px; min-width: 0; }
+@media (min-width: 760px) {
+  .our { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.25fr) minmax(0, 1fr); align-items: center; gap: 20px; padding: 14px 18px; }
+  .our .code { font-size: 11.5px; color: var(--muted); background: none; padding: 0; }
+}
 .our { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 12px; align-content: start; min-width: 0; }
 .our .hd { display: flex; gap: 12px; align-items: center; }
 .our .hd b { display: block; font-family: var(--f-display); font-size: 17px; line-height: 1.2; }
@@ -575,11 +581,12 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
           <div class="src">Public offer${OFFERS_AS_OF ? " as of " + esc(OFFERS_AS_OF) : ""} · <a href="${esc(OFFERS[id].url)}" target="_blank" rel="noopener noreferrer">Check current offer ↗</a></div>
         </div>` : offersState === "loading" ? `<div class="offer"><div class="eyebrow">Sign-up bonus</div><div class="terms">Loading the current offer…</div></div>`
           : offersState === "failed" ? `<div class="offer"><div class="eyebrow">Sign-up bonus</div><div class="terms">Couldn't load the current offer. Reload the page to try again.</div></div>` : ""}
-        ${link ? `<div class="code">${esc(link)}</div>
+        <div class="lk">${link ? `
           <div class="acts">
             ${isUrl ? `<a class="btn small primary" href="${esc(link)}" target="_blank" rel="noopener noreferrer">Apply with our link ↗</a>` : ""}
             <button class="btn small" data-copy="${esc(link)}">Copy ${isUrl ? "link" : "code"}</button>
-          </div>` : `<p class="soon">Link coming soon.</p>`}
+          </div>
+          <div class="code">${esc(link)}</div>` : `<p class="soon">Link coming soon.</p>`}</div>
       </div>`;
   }
   function renderQuiz() {

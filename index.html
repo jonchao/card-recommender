@@ -212,9 +212,9 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
 .bank h3 .meta { font-family: var(--f-body); font-size: 13px; font-weight: 400; color: var(--muted); }
 /* Logos sit on a white badge so they read on both themes. */
 .logo { flex: none; display: inline-flex; align-items: center; justify-content: center; background: #fff; border-radius: 6px; padding: 4px 7px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
-.logo img { display: block; height: 18px; width: auto; }
+.logo img { display: block; width: auto; }
 .logo.logo-amex { padding: 0; background: transparent; box-shadow: none; }
-.logo.logo-amex img { height: 30px; border-radius: 4px; }
+.logo.logo-amex img { border-radius: 4px; }
 .bank h3 .logo img { height: 22px; }
 .bank h3 .logo.logo-amex img { height: 34px; }
 .offer { background: var(--accent-soft); border-radius: 10px; padding: 12px; display: grid; gap: 2px; }
@@ -598,14 +598,14 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
       if (!ids.length) return "";
       return `<section class="bank">
         <h3><span class="logo logo-${b.eco}"><img src="${b.logo}" alt=""></span>${esc(b.name)} <span class="meta">${ids.length} card${ids.length > 1 ? "s" : ""}</span></h3>
-        <div class="ours">${ids.map((id) => ourTile(id, b)).join("")}</div>
+        <div class="ours">${ids.map(ourTile).join("")}</div>
       </section>`;
     }).join("");
   }
-  function ourTile(id, b) {
+  function ourTile(id) {
       const c = CARD[id], link = ourLink(id), isUrl = URL_RE.test(link);
       return `<div class="our">
-        <div class="hd"><span class="face lg" style="background:${c.face}"></span><div class="nm"><b>${esc(c.name)}</b><span>${c.fee ? money(c.fee) + " annual fee" : "No annual fee"}</span></div><span class="logo logo-${b.eco}"><img src="${b.logo}" alt="${esc(b.name)}"></span></div>
+        <div class="hd"><span class="face lg" style="background:${c.face}"></span><div class="nm"><b>${esc(c.name)}</b><span>${c.fee ? money(c.fee) + " annual fee" : "No annual fee"}</span></div></div>
         ${OFFERS[id] ? `<div class="offer">
           <div class="eyebrow">Sign-up bonus</div>
           <div class="amt">${esc(OFFERS[id].bonus)}</div>

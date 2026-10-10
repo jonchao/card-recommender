@@ -198,7 +198,7 @@ td.r, th.r { text-align: right; }
 .ref .who b { font-size: 15px; }
 .ref .who span { font-size: 12px; color: var(--muted); }
 .ref q { font-size: 13.5px; color: var(--ink); quotes: "\201C" "\201D"; }
-.ref .code { font-family: var(--f-mono); font-size: 12.5px; background: var(--sunken); border-radius: 6px; padding: 6px 8px; overflow-wrap: anywhere; }
+.ref .code, .our .code { font-family: var(--f-mono); font-size: 12.5px; background: var(--sunken); border-radius: 6px; padding: 6px 8px; overflow-wrap: anywhere; }
 .ref .acts { display: flex; gap: 6px; flex-wrap: wrap; }
 .ref .acts a { text-decoration: none; }
 dialog { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink); padding: 0; width: min(460px, calc(100vw - 32px)); box-shadow: var(--shadow); }
@@ -210,6 +210,19 @@ dialog h2 { font-size: 20px; }
 .dlg-acts { display: flex; justify-content: flex-end; gap: 8px; }
 .notice { background: var(--maybe-soft); color: var(--ink); border-radius: 10px; padding: 10px 14px; font-size: 13.5px; }
 footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+/* ---------- our links ---------- */
+.ours { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.our { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+.our .hd { display: flex; gap: 12px; align-items: center; }
+.our .hd b { display: block; font-family: var(--f-display); font-size: 17px; line-height: 1.2; }
+.our .hd span { font-size: 12.5px; color: var(--muted); }
+.our .acts { display: flex; gap: 6px; flex-wrap: wrap; }
+.our .acts a { text-decoration: none; }
+.our .soon { font-size: 13px; color: var(--muted); margin: 0; }
+.apply { display: flex; flex-wrap: wrap; gap: 6px; }
+.apply a { text-decoration: none; }
+.pick .apply { grid-column: 2 / -1; }
+
 /* ---------- phones ---------- */
 @media (max-width: 560px) {
   input[type=text], input[type=password], input[type=url], select, textarea { font-size: 16px; } /* stops iOS zoom-on-focus */
@@ -271,7 +284,8 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     </div>
     <nav class="tabs" role="tablist" aria-label="Sections">
       <button class="tab" role="tab" id="tab-quiz" aria-controls="view-quiz" aria-selected="true">Find my card</button>
-      <button class="tab" role="tab" id="tab-refs" aria-controls="view-refs" aria-selected="false">Referrals<span class="count" id="refCount"></span></button>
+      <button class="tab" role="tab" id="tab-ours" aria-controls="view-ours" aria-selected="false">Our links</button>
+      <button class="tab" role="tab" id="tab-refs" aria-controls="view-refs" aria-selected="false">Friends<span class="count" id="refCount"></span></button>
     </nav>
   </header>
 
@@ -319,7 +333,19 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     </div>
   </section>
 
-  <!-- referrals -->
+  <!-- our referral links -->
+  <section id="view-ours" role="tabpanel" aria-labelledby="tab-ours" hidden>
+    <div class="ref-head">
+      <div>
+        <div class="eyebrow">From us</div>
+        <h2 style="font-size:24px">Our referral links</h2>
+        <p>If one of these cards is right for you, applying through our link earns us bonus points at no cost to you. Check that the offer on the link is at least as good as the public one.</p>
+      </div>
+    </div>
+    <div class="ours" id="oursGrid"></div>
+  </section>
+
+  <!-- friends' referrals -->
   <section id="view-refs" role="tabpanel" aria-labelledby="tab-refs" hidden>
     <div class="ref-head">
       <div>
@@ -406,6 +432,17 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     { id: "savor", name: "Capital One Savor", short: "Savor", eco: "c1", tier: "supplemental", fee: 0, face: "linear-gradient(135deg,#a8324a,#5e1527)" }
   ];
   const CARD = Object.fromEntries(CARDS.map((c) => [c.id, c]));
+  // Our own referral links, shown on the "Our links" tab and as Apply buttons in results.
+  // Paste a full https:// link (or a plain code) for each card; leave "" to hide it.
+  const OUR_LINKS = {
+    csr: "",
+    csp: "",
+    fu: "",
+    flex: "",
+    plat: "",
+    gold: ""
+  };
+  const ourLink = (cid) => (typeof OUR_LINKS[cid] === "string" && OUR_LINKS[cid].trim()) || "";
   const ECO = { chase: "Chase Ultimate Rewards", amex: "Amex Membership Rewards", c1: "Capital One Miles" };
 
   // ---------- perks: offers = { card: [estimated $/yr if you use it, short detail] } ----------
@@ -475,11 +512,12 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
   let answers = {};
   let exampleOf = null;
   try {
-    const saved = JSON.parse(store.get("ccr-answers") || "null");
+    // Starts blank; answers are saved as you go so a returning visitor picks up where they left off.
+    const saved = JSON.parse(store.get("ccr-answers-v2") || "null");
     if (saved && typeof saved === "object") { answers = saved.answers || {}; exampleOf = saved.exampleOf || null; }
   } catch (_) {}
-  if (!Object.keys(answers).length && !store.get("ccr-answers")) applyPreset("traveler", true);
-  function save() { store.set("ccr-answers", JSON.stringify({ answers, exampleOf })); }
+  store.del("ccr-answers");  // old key that started everyone on the example profile
+  function save() { store.set("ccr-answers-v2", JSON.stringify({ answers, exampleOf })); }
   function applyPreset(key, quiet) {
     const p = PRESETS[key]; answers = {};
     PERKS.forEach((k) => { answers[k.id] = p.use.includes(k.id) ? "use" : p.maybe.includes(k.id) ? "maybe" : "no"; });
@@ -542,6 +580,27 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     const c = CARD[cid];
     return `<span class="chip"><span class="dot" style="background:${c.face}"></span>${esc(c.short)}${detail ? ` <b>${esc(detail)}</b>` : ""}</span>`;
   }
+  // A link opens the issuer's offer; a plain code gets a copy button instead.
+  function applyBtn(cid, label) {
+    const link = ourLink(cid);
+    return URL_RE.test(link)
+      ? `<a class="btn small primary" href="${esc(link)}" target="_blank" rel="noopener noreferrer">${esc(label)} ↗</a>`
+      : `<button class="btn small" data-copy="${esc(link)}">Copy ${esc(CARD[cid].short)} code</button>`;
+  }
+  function renderOurs() {
+    const ids = CARDS.map((c) => c.id).filter((id) => id in OUR_LINKS);
+    $("oursGrid").innerHTML = ids.map((id) => {
+      const c = CARD[id], link = ourLink(id), isUrl = URL_RE.test(link);
+      return `<div class="our">
+        <div class="hd"><span class="face lg" style="background:${c.face}"></span><div><b>${esc(c.name)}</b><span>${c.fee ? money(c.fee) + " annual fee" : "No annual fee"}</span></div></div>
+        ${link ? `<div class="code">${esc(link)}</div>
+          <div class="acts">
+            ${isUrl ? `<a class="btn small primary" href="${esc(link)}" target="_blank" rel="noopener noreferrer">Apply with our link ↗</a>` : ""}
+            <button class="btn small" data-copy="${esc(link)}">Copy ${isUrl ? "link" : "code"}</button>
+          </div>` : `<p class="soon">Link coming soon.</p>`}
+      </div>`;
+    }).join("");
+  }
   function renderQuiz() {
     let html = "", n = 0;
     SECTIONS.forEach(([sid, title], i) => {
@@ -599,6 +658,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
           <div><div class="rank">#${i + 1}</div><div class="name">${esc(s.card.name)}</div><div class="meta">${s.card.fee ? money(s.card.fee) + " fee" : "No annual fee"} · ${Math.round(s.fit * 100)}% fit</div></div>
           <div class="net num ${s.net >= 0 ? "pos" : "neg"}">${signed(s.net)}<small>net / yr</small></div>
           ${top3 ? `<div class="why">Driven by ${top3}.</div>` : ""}
+          ${ourLink(s.card.id) ? `<div class="apply">${applyBtn(s.card.id, "Apply with our link")}</div>` : ""}
           ${n ? `<button class="ref-link" data-goref="${s.card.id}">${n} friend${n > 1 ? "s'" : "'s"} referral link${n > 1 ? "s" : ""} →</button>` : ""}
         </div>`;
       }).join("");
@@ -615,6 +675,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
         <div class="cards">${c.ids.map((id, i) => `${i ? '<span class="plus">+</span>' : ""}<span class="face" style="background:${CARD[id].face}"></span>${esc(CARD[id].short)}`).join(" ")}</div>
         <div class="line"><span>${c.fee ? money(c.fee) + " total fees" : "No annual fees"} · ${signed(c.lift)} vs. best single card</span><span class="num ${c.net >= 0 ? "pos" : "neg"}">${signed(c.net)}</span></div>
         ${note ? `<p class="note">${note}</p>` : ""}
+        ${c.ids.some(ourLink) ? `<div class="apply">${c.ids.filter(ourLink).map((id) => applyBtn(id, CARD[id].short)).join("")}</div>` : ""}
       </div>`;
     }).join("") : `<p class="empty">${liked ? "None of the pairings beat your top single card for these answers." : "Combos appear once you've picked some perks."}</p>`;
 
@@ -648,14 +709,17 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
   }
 
   // ---------- tabs ----------
+  const TABS = { quiz: "quiz", ours: "our-links", refs: "referrals" };  // tab -> URL hash
   function showTab(t) {
-    const q = t !== "refs";
-    $("tab-quiz").setAttribute("aria-selected", q); $("tab-refs").setAttribute("aria-selected", !q);
-    $("view-quiz").hidden = !q; $("view-refs").hidden = q;
+    if (!TABS[t]) t = "quiz";
+    for (const k of Object.keys(TABS)) { $("tab-" + k).setAttribute("aria-selected", k === t); $("view-" + k).hidden = k !== t; }
+    const q = t === "quiz";
     $("mbar").hidden = !q; document.body.classList.toggle("quiz-tab", q);
-    if (location.hash !== "#" + (q ? "quiz" : "referrals")) history.replaceState(null, "", "#" + (q ? "quiz" : "referrals"));
+    if (location.hash !== "#" + TABS[t]) history.replaceState(null, "", "#" + TABS[t]);
   }
+  const tabFromHash = () => Object.keys(TABS).find((k) => "#" + TABS[k] === location.hash) || "quiz";
   $("tab-quiz").addEventListener("click", () => showTab("quiz"));
+  $("tab-ours").addEventListener("click", () => { showTab("ours"); renderOurs(); });
   $("tab-refs").addEventListener("click", () => { showTab("refs"); renderRefs(); });
 
   // ---------- referrals ----------
@@ -696,11 +760,15 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     </div>`;
   }
   $("refFilters").addEventListener("click", (e) => { const b = e.target.closest("[data-f]"); if (b) { refFilter = b.dataset.f; renderRefs(); } });
-  $("refGroups").addEventListener("click", async (e) => {
+  document.addEventListener("click", async (e) => {
     const b = e.target.closest("[data-copy]"); if (!b) return;
     const txt = b.dataset.copy, label = b.textContent;
     try { await navigator.clipboard.writeText(txt); b.textContent = "Copied"; }
-    catch (_) { const code = b.closest(".ref").querySelector(".code"); const rg = document.createRange(); rg.selectNodeContents(code); const s = getSelection(); s.removeAllRanges(); s.addRange(rg); b.textContent = "Selected, press Copy"; }
+    catch (_) {
+      const code = b.closest(".ref, .our") && b.closest(".ref, .our").querySelector(".code");
+      if (code) { const rg = document.createRange(); rg.selectNodeContents(code); const s = getSelection(); s.removeAllRanges(); s.addRange(rg); b.textContent = "Selected, press Copy"; }
+      else b.textContent = txt;
+    }
     setTimeout(() => { b.textContent = label; }, 1600);
   });
 
@@ -739,8 +807,8 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
   let fsdb = null, unsub = null;
   function openApp() {
     $("lock").hidden = true; $("app").hidden = false;
-    showTab(location.hash === "#referrals" ? "refs" : "quiz");
-    update(); renderRefs();
+    showTab(tabFromHash());
+    update(); renderRefs(); renderOurs();
   }
   function showLock(msg) {
     if (unsub) { unsub(); unsub = null; }

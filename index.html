@@ -163,6 +163,10 @@ header.top { display: flex; align-items: center; justify-content: space-between;
 .combo .plus { color: var(--muted); font-weight: 400; }
 .combo .line { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; color: var(--muted); }
 .combo .note { font-size: 12.5px; color: var(--muted); margin: 0; }
+.whynot { border-top: 1px dashed var(--line); padding-top: 10px; display: grid; gap: 8px; }
+.whynot .wn { display: grid; gap: 2px; }
+.whynot .line { display: flex; justify-content: space-between; gap: 8px; font-size: 13.5px; }
+.whynot .note { font-size: 12.5px; color: var(--muted); margin: 0; }
 .empty { color: var(--muted); font-size: 14px; margin: 0; }
 .tbl-wrap { overflow-x: auto; }
 table { border-collapse: collapse; width: 100%; font-size: 13px; }
@@ -546,6 +550,31 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
     }).filter((c) => c.lift > 0).sort((a, b) => b.net - a.net).slice(0, 3);
   }
 
+  // Same-bank cards the top pick wasn't paired with, and why: the extra fee is more than the extra perks you'd use.
+  const FAMILY = { csr: "sapphire", csp: "sapphire", vx: "venture", venture: "venture" };  // nobody holds both
+  function whyNotPairs(top, shown) {
+    const t = top.card.id;
+    const rows = CARDS
+      .filter((p) => p.id !== t && p.eco === top.card.eco && !(FAMILY[t] && FAMILY[t] === FAMILY[p.id]))
+      .filter((p) => !shown.some((c) => c.ids.includes(t) && c.ids.includes(p.id)))
+      .map((p) => {
+        const ids = [t, p.id], value = comboValue(ids);
+        return { p, net: value - feeOf(ids), added: value - comboValue([t]) };
+      })
+      .map((r) => ({ ...r, gap: top.net - r.net }))
+      .filter((r) => r.gap > 0)
+      .sort((a, b) => a.gap - b.gap)
+      .slice(0, 2);
+    if (!rows.length) return "";
+    return `<div class="whynot"><div class="eyebrow">Why not pair your ${esc(top.card.short)}?</div>${rows.map((r) => `
+      <div class="wn">
+        <div class="line"><b>${esc(top.card.short)} + ${esc(r.p.short)}</b><span class="num neg">${signed(r.net)}</span></div>
+        <p class="note">${money(r.gap)} less per year than ${esc(top.card.short)} alone. ${r.added >= 1
+          ? `${esc(r.p.short)} only adds ${money(r.added)} in perks you'd use, but costs ${money(r.p.fee)} a year.`
+          : `You didn't mark any perks that ${esc(r.p.short)} adds, so its ${money(r.p.fee)} fee isn't covered.`}</p>
+      </div>`).join("")}</div>`;
+  }
+
   // ---------- quiz render ----------
   function chip(cid, detail) {
     const c = CARD[cid];
@@ -665,6 +694,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
         ${c.ids.some(ourLink) ? `<div class="apply">${c.ids.filter(ourLink).map((id) => applyBtn(id, CARD[id].short)).join("")}</div>` : ""}
       </div>`;
     }).join("") : `<p class="empty">${liked ? "None of the pairings beat your top single card for these answers." : "Combos appear once you've picked some perks."}</p>`;
+    if (liked) $("combos").innerHTML += whyNotPairs(scores[0], cs);
 
     $("allTable").innerHTML = `<thead><tr><th>Card</th><th class="r">Fee</th><th class="r">Perks</th><th class="r">Net</th><th class="r col-fit">Fit</th></tr></thead><tbody>` +
       scores.map((s) => `<tr><td><span style="display:inline-flex;gap:8px;align-items:center"><span class="face" style="background:${s.card.face};width:26px;height:16px"></span>${esc(s.card.short)}</span></td>

@@ -212,6 +212,44 @@ td.r, th.r { text-align: right; }
 /* ---------- referrals ---------- */
 .ref-head { display: flex; justify-content: space-between; align-items: end; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
 .ref-head p { margin: 4px 0 0; color: var(--muted); max-width: 60ch; }
+
+/* ---------- benefits tab: card lists, with the chat in a sticky side column on desktop and on top on phones ---------- */
+.blayout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 24px; align-items: start; }
+.blayout .chat { grid-column: 2; grid-row: 1; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 14px); }
+.blayout .blist { grid-column: 1; grid-row: 1; min-width: 0; }
+@media (max-width: 920px) {
+  .blayout { grid-template-columns: minmax(0, 1fr); }
+  .blayout .chat, .blayout .blist { grid-column: auto; grid-row: auto; }
+  .blayout .chat { position: static; }
+}
+.chat-log { display: grid; gap: 10px; align-content: start; max-height: min(56vh, 520px); overflow: auto; padding: 2px; }
+.msg { max-width: 92%; padding: 9px 12px; border-radius: 12px; font-size: 14px; line-height: 1.45; overflow-wrap: anywhere; }
+.msg.me { justify-self: end; background: var(--accent); color: var(--accent-ink); border-bottom-right-radius: 4px; }
+.msg.bot { justify-self: start; background: var(--sunken); border-bottom-left-radius: 4px; }
+.msg p { margin: 0; }
+.msg p + p, .msg ul + p { margin-top: 8px; }
+.msg ul { margin: 4px 0 0; padding-left: 18px; }
+.msg li { margin: 1px 0; }
+.msg .k { font-weight: 600; }
+.msg .m { color: var(--muted); font-size: 13px; }
+.chat-form { display: flex; gap: 8px; }
+.chat-form input { flex: 1; min-width: 0; }
+.suggest { display: flex; flex-wrap: wrap; gap: 6px; }
+.suggest button, .bfilter button { border: 1px solid var(--line); background: var(--surface); border-radius: 99px; padding: 5px 10px; font-size: 12.5px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.suggest button:hover, .bfilter button:hover { border-color: var(--muted); }
+.bfilter { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.bfilter button[aria-pressed=true] { background: var(--accent-soft); border-color: var(--accent); color: var(--ink); font-weight: 600; }
+.bfilter .dot { width: 14px; height: 9px; border-radius: 2px; }
+.bgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.bcard { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 10px; align-content: start; }
+.bcard .hd { display: flex; align-items: center; gap: 10px; }
+.bcard .hd b { display: block; font-size: 15px; }
+.bcard .hd span { font-size: 12px; color: var(--muted); }
+.bcard h4 { margin: 0 0 2px; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.bcard ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 1px; }
+.bcard li { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 13.5px; padding: 3px 6px; margin-inline: -6px; border-radius: 6px; }
+.bcard li .d { font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); text-align: right; }
+.bcard li.hit { background: var(--accent-soft); font-weight: 600; }
 .our .code { font-family: var(--f-mono); font-size: 12.5px; background: var(--sunken); border-radius: 6px; padding: 6px 8px; overflow-wrap: anywhere; }
 footer { position: relative; margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
 /* Data freshness: when the daily bonus check and weekly fees & perks check last ran (status.json). */
@@ -289,6 +327,7 @@ footer { position: relative; margin-top: 40px; padding-top: 16px; border-top: 1p
   .col-fit { display: none; }
   th, td { padding: 8px 5px; }
 }
+@media (max-width: 359px) { .tab { padding: 10px 4px; font-size: 13px; } }  /* three tabs on the smallest phones */
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
@@ -327,6 +366,7 @@ footer { position: relative; margin-top: 40px; padding-top: 16px; border-top: 1p
     <div class="hd-tools">
       <nav class="tabs" role="tablist" aria-label="Sections">
         <button class="tab" role="tab" id="tab-quiz" aria-controls="view-quiz" aria-selected="true">Find my card</button>
+        <button class="tab" role="tab" id="tab-benefits" aria-controls="view-benefits" aria-selected="false">Benefits</button>
         <button class="tab" role="tab" id="tab-ours" aria-controls="view-ours" aria-selected="false">Our links</button>
       </nav>
       <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch to dark mode" title="Switch to dark mode">
@@ -384,6 +424,32 @@ footer { position: relative; margin-top: 40px; padding-top: 16px; border-top: 1p
           <p class="fine">Net value = estimated yearly value of the perks you'd use (Maybe counts 40%) minus the annual fee. Sign-up bonuses are not included. Card terms as of Oct 2026.</p>
         </div>
       </aside>
+    </div>
+  </section>
+
+  <!-- every card's benefits, with a chat-style search -->
+  <section id="view-benefits" role="tabpanel" aria-labelledby="tab-benefits" hidden>
+    <div class="ref-head">
+      <div>
+        <div class="eyebrow">All benefits</div>
+        <h2 style="font-size:24px">Card benefits</h2>
+        <p>Every benefit we track for each card. Ask which cards have a benefit, or pick cards to compare.</p>
+      </div>
+    </div>
+    <div class="blayout">
+      <aside class="chat panel" aria-label="Ask about benefits">
+        <h2>Ask about benefits</h2>
+        <div class="chat-log" id="chatLog" role="log" aria-live="polite"></div>
+        <form class="chat-form" id="chatForm" autocomplete="off">
+          <input type="text" id="chatInput" maxlength="200" placeholder="e.g. Which cards have Global Entry?" aria-label="Ask about benefits" enterkeyhint="send">
+          <button class="btn primary" type="submit">Ask</button>
+        </form>
+        <div class="suggest" id="chatSuggest"></div>
+      </aside>
+      <div class="blist">
+        <div class="bfilter" id="bFilter" aria-label="Show cards"></div>
+        <div class="bgrid" id="bGrid"></div>
+      </div>
     </div>
   </section>
 
@@ -785,6 +851,128 @@ footer { position: relative; margin-top: 40px; padding-top: 16px; border-top: 1p
     }
   }
 
+  // ---------- benefits tab: every card's perks, plus a chat that answers from the same data ----------
+  const BENEFITS = PERKS.concat(AUTO.map((a) => ({ ...a, sec: "earn", desc: "Every cardholder gets this automatically." })));
+  const BSEARCH = BENEFITS.map((p) => ({
+    p, label: norm(p.label),
+    text: norm([p.label, p.desc, SECTION_NAME[p.sec], KEYWORDS[p.id] || "", ...Object.values(p.offers).map((o) => o[1])].join(" "))
+  }));
+  const ECO_IDS = (eco) => CARDS.filter((c) => c.eco === eco).map((c) => c.id);
+  // What people call each card, checked in order; a match is cut from the question before the next check.
+  const CARD_RE = [
+    [["csr"], /\b(chase )?sapphire reserve\b|\bcsr\b/], [["csp"], /\b(chase )?sapphire preferred\b|\bcsp\b/],
+    [["vx"], /\bventure ?x\b|\bvx\b/], [["venture"], /\bventure( rewards)?\b/],
+    [["fu"], /\b(chase )?freedom unlimited\b|\bcfu\b/], [["flex"], /\b(chase )?freedom flex\b|\bcff\b|\bflex\b/],
+    [["plat"], /\b(amex )?platinum\b|\bplat\b/], [["gold"], /(?<!(marriott|hilton) )\b(amex )?gold\b(?! status)/], [["savor"], /\bsavor\b/],
+    [["csr"], /\breserve\b/], [["csp"], /\bpreferred\b/],
+    [["csr", "csp"], /\bsapphires?\b/], [["fu", "flex"], /\bfreedoms?\b/],
+    [ECO_IDS("chase"), /\bchase\b/], [ECO_IDS("amex"), /\bamex\b|\bamerican express\b/], [ECO_IDS("c1"), /\bcapital one\b|\bcap one\b|\bc1\b/]
+  ];
+  const FILLER = new Set(("a an the and or any all both each which what whats who how do does did is are can could would will my me i we you " +
+    "to for of on in at with that this these those card cards benefit benefits perk perks offer offers provide provides give gives get gets " +
+    "have has include includes come comes show list tell about see find want need compare vs versus between access best good top most").split(" "));
+  const FEE_RE = / annual fees? | no fees? | no annual | cheapest /;
+  function parseQuestion(text) {
+    let q = " " + norm(text) + " ";
+    const ids = new Set();
+    for (const [cs, re] of CARD_RE) if (re.test(q)) { cs.forEach((id) => ids.add(id)); q = q.replace(new RegExp(re.source, "g"), " "); }
+    return { cards: CARDS.map((c) => c.id).filter((id) => ids.has(id)), words: q.split(" ").filter((w) => w && !FILLER.has(w)) };
+  }
+  // A word matches at the start of any word in the text, so "lounge" finds "lounges" and "fees" finds "fee".
+  const hasWord = (text, w) => (" " + text).includes(" " + w) || (w.length > 3 && w.endsWith("s") && (" " + text).includes(" " + w.slice(0, -1)));
+  function matchBenefits(words) {
+    if (!words.length) return [];
+    const scored = BSEARCH.map((s) => ({ p: s.p, n: words.filter((w) => hasWord(s.text, w)).length, inLabel: words.filter((w) => hasWord(s.label, w)).length }));
+    let pick = scored.filter((s) => s.n === words.length);
+    if (!pick.length) {  // no benefit has every word: settle for the best partial match if it covers at least half
+      const best = Math.max(...scored.map((s) => s.n));
+      pick = best && best / words.length >= 0.5 ? scored.filter((s) => s.n === best) : [];
+    }
+    return pick.sort((a, b) => b.inLabel - a.inLabel).map((s) => s.p);
+  }
+  const cname = (id) => esc(CARD[id].short);
+  const detail = (p, id) => (p.offers[id][1] ? " · " + esc(p.offers[id][1]) : "");
+  function answer(text) {
+    const nq = " " + norm(text) + " ", { cards, words } = parseQuestion(text), all = CARDS.map((c) => c.id);
+    if (FEE_RE.test(nq)) {
+      const free = / no (annual )?fees? /.test(nq);
+      const pool = (cards.length ? cards : all).map((id) => CARD[id]).filter((c) => !free || !c.fee).sort((a, b) => a.fee - b.fee);
+      return { cards: pool.map((c) => c.id), html: pool.length
+        ? `<p>${free ? "No annual fee:" : "Annual fees:"}</p><ul>${pool.map((c) => `<li>${esc(c.short)}: <span class="k">${c.fee ? money(c.fee) : "$0"}</span></li>`).join("")}</ul>`
+        : `<p>All of those cards have an annual fee.</p>` };
+    }
+    const found = matchBenefits(words), top = found.slice(0, 6), hits = top.map((p) => p.id);
+    if (found.length && !cards.length) {
+      const offering = new Set(top.flatMap((p) => Object.keys(p.offers)));
+      return { cards: all.filter((id) => offering.has(id)), hits, html: (top.length > 1 ? `<p>${found.length} benefits match:</p>` : "") +
+        top.map((p) => { const ids = Object.keys(p.offers);
+          return `<p><span class="k">${esc(p.label)}</span>: ${ids.length === 1 ? "only 1 card" : ids.length + " cards"}</p><ul>${ids.map((id) => `<li>${cname(id)}${detail(p, id)}</li>`).join("")}</ul>`; }).join("") +
+        (found.length > top.length ? `<p class="m">${found.length - top.length} more match. Try more specific words.</p>` : "") +
+        `<p class="m">Highlighted in the card lists.</p>` };
+    }
+    if (found.length) {  // cards named: yes or no for each
+      return { cards, hits, html: top.slice(0, 4).map((p) => {
+        const others = Object.keys(p.offers).filter((id) => !cards.includes(id));
+        return `<p><span class="k">${esc(p.label)}</span></p><ul>${cards.map((id) => `<li>${cname(id)}: ${p.offers[id] ? "<span class=\"k\">yes</span>" + detail(p, id) : "no"}</li>`).join("")}</ul>` +
+          (others.length ? `<p class="m">Also on ${others.map(cname).join(", ")}.</p>` : "");
+      }).join("") };
+    }
+    if (words.length && cards.length) {
+      return { cards, html: `<p>I couldn't find a benefit matching “${esc(words.join(" "))}” on ${cards.map(cname).join(", ")}. Everything ${cards.length > 1 ? "they offer is" : "it offers is"} in the card lists.</p>` };
+    }
+    if (cards.length === 1) {
+      const c = CARD[cards[0]], mine = BENEFITS.filter((p) => p.offers[c.id]).sort((a, b) => b.offers[c.id][0] - a.offers[c.id][0]);
+      return { cards, html: `<p><span class="k">${esc(c.name)}</span>: ${c.fee ? money(c.fee) + " annual fee" : "no annual fee"}, ${mine.length} benefits. The most valuable:</p>` +
+        `<ul>${mine.slice(0, 5).map((p) => `<li>${esc(p.label)}${detail(p, c.id)}</li>`).join("")}</ul><p class="m">The full list is in the card lists.</p>` };
+    }
+    if (cards.length > 1) {
+      const shared = BENEFITS.filter((p) => cards.every((id) => p.offers[id]));
+      const only = cards.map((id) => [id, BENEFITS.filter((p) => p.offers[id] && cards.every((o) => o === id || !p.offers[o]))]);
+      const ul = (l) => `<ul>${l.slice(0, 8).map((p) => `<li>${esc(p.label)}</li>`).join("")}</ul>${l.length > 8 ? `<p class="m">${l.length - 8} more in the card lists.</p>` : ""}`;
+      return { cards, hits: shared.map((p) => p.id), html:
+        `<p><span class="k">${cards.length === 2 ? "Both" : "All " + cards.length} have</span> (${shared.length})</p>${shared.length ? ul(shared) : `<p class="m">Nothing in common.</p>`}` +
+        only.map(([id, l]) => `<p><span class="k">Only ${cname(id)}</span> (${l.length})</p>${l.length ? ul(l) : ""}`).join("") };
+    }
+    return { cards: [], html: `<p>I couldn't match that to a benefit or a card. Try a benefit like <i>lounge</i>, <i>Global Entry</i>, <i>hotel credit</i> or <i>rental car insurance</i>, or name cards to compare, like <i>Platinum vs Sapphire Reserve</i>.</p>` };
+  }
+
+  let bSel = new Set(), bHits = new Set();  // cards shown (empty = all) and benefits the last answer matched
+  function renderBenefits() {
+    $("bFilter").innerHTML = `<button type="button" data-card="" aria-pressed="${!bSel.size}">All cards</button>` +
+      CARDS.map((c) => `<button type="button" data-card="${c.id}" aria-pressed="${bSel.has(c.id)}"><span class="dot" style="background:${c.face}"></span>${esc(c.short)}</button>`).join("");
+    $("bGrid").innerHTML = CARDS.filter((c) => !bSel.size || bSel.has(c.id)).map((c) => {
+      const mine = BENEFITS.filter((p) => p.offers[c.id]);
+      return `<article class="bcard">
+        <div class="hd"><span class="face" style="background:${c.face}"></span><div><b>${esc(c.name)}</b><span>${c.fee ? money(c.fee) + " annual fee" : "No annual fee"} · ${mine.length} benefits</span></div></div>
+        ${SECTIONS.map(([sid, title]) => [title, mine.filter((p) => p.sec === sid)]).filter(([, l]) => l.length).map(([title, l]) => `<div><h4>${esc(title)}</h4><ul>${
+          l.map((p) => `<li class="${bHits.has(p.id) ? "hit" : ""}"><span>${esc(p.label)}</span>${p.offers[c.id][1] ? `<span class="d">${esc(p.offers[c.id][1])}</span>` : ""}</li>`).join("")}</ul></div>`).join("")}
+      </article>`;
+    }).join("");
+  }
+  $("bFilter").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-card]"); if (!b) return;
+    const id = b.dataset.card;
+    if (!id) bSel.clear(); else if (bSel.has(id)) bSel.delete(id); else bSel.add(id);
+    renderBenefits();
+  });
+  function addMsg(who, html) {
+    $("chatLog").insertAdjacentHTML("beforeend", `<div class="msg ${who}">${html}</div>`);
+    $("chatLog").scrollTop = $("chatLog").scrollHeight;
+  }
+  function ask(text) {
+    const t = text.trim(); if (!t) return;
+    addMsg("me", esc(t));
+    const a = answer(t);
+    addMsg("bot", a.html);
+    bSel = new Set(a.cards); bHits = new Set(a.hits || []); renderBenefits();
+  }
+  const SUGGEST = ["Which cards have Global Entry?", "Lounge access", "No foreign transaction fees", "Platinum vs Sapphire Reserve", "What does Venture X offer?", "Cards with no annual fee"];
+  $("chatSuggest").innerHTML = SUGGEST.map((t) => `<button type="button">${esc(t)}</button>`).join("");
+  $("chatSuggest").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) ask(b.textContent); });
+  $("chatForm").addEventListener("submit", (e) => { e.preventDefault(); ask($("chatInput").value); $("chatInput").value = ""; });
+  addMsg("bot", "<p>Ask which cards have a benefit, like “Which cards have Global Entry?”, or name cards to compare them.</p>");
+  renderBenefits();
+
   // ---------- results render ----------
   function update() {
     const answered = PERKS.filter((p) => answers[p.id]).length;
@@ -853,7 +1041,7 @@ footer { position: relative; margin-top: 40px; padding-top: 16px; border-top: 1p
   }
 
   // ---------- tabs ----------
-  const TABS = { quiz: "quiz", ours: "our-links" };  // tab -> URL hash
+  const TABS = { quiz: "quiz", benefits: "benefits", ours: "our-links" };  // tab -> URL hash
   function showTab(t) {
     if (!TABS[t]) t = "quiz";
     for (const k of Object.keys(TABS)) { $("tab-" + k).setAttribute("aria-selected", k === t); $("view-" + k).hidden = k !== t; }
@@ -863,6 +1051,7 @@ footer { position: relative; margin-top: 40px; padding-top: 16px; border-top: 1p
   }
   const tabFromHash = () => Object.keys(TABS).find((k) => "#" + TABS[k] === location.hash) || "quiz";
   $("tab-quiz").addEventListener("click", () => showTab("quiz"));
+  $("tab-benefits").addEventListener("click", () => showTab("benefits"));
   $("tab-ours").addEventListener("click", () => { showTab("ours"); renderOurs(); });
 
   // ---------- links ----------

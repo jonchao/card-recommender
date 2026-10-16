@@ -8,6 +8,8 @@ A passcode-protected credit card recommender. Visitors mark perks as **Use / May
 - Freedom Unlimited and Freedom Flex
 - Savor
 
+A **Benefits** tab lists every benefit for each card, with filter buttons to compare cards and a chat box that answers questions like "Which cards have Global Entry?", "Does Gold have Uber Cash?" or "Platinum vs Sapphire Reserve". It runs in the page and answers from the same `PERKS` data as the quiz, so it stays current when the weekly check updates that data.
+
 An **Our links** tab lists our own referral links and each card's current sign-up bonus, grouped by bank.
 
 Everything lives in `index.html` (plus bank logos in `logos/`), with no build step. It's hosted on GitHub Pages; Firestore only checks the passcode.

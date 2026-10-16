@@ -213,7 +213,19 @@ td.r, th.r { text-align: right; }
 .ref-head { display: flex; justify-content: space-between; align-items: end; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
 .ref-head p { margin: 4px 0 0; color: var(--muted); max-width: 60ch; }
 .our .code { font-family: var(--f-mono); font-size: 12.5px; background: var(--sunken); border-radius: 6px; padding: 6px 8px; overflow-wrap: anywhere; }
-footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+footer { position: relative; margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+/* Data freshness: when the daily bonus check and weekly fees & perks check last ran (status.json). */
+.fresh { margin-left: auto; }  /* the panel anchors to the footer so it stays on screen */
+.fresh summary { list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 99px; }
+.fresh summary::-webkit-details-marker { display: none; }
+.fresh summary:hover, .fresh[open] summary { background: var(--sunken); color: var(--ink); }
+.fresh .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--line); flex: none; }
+.fresh[data-state=ok] .dot { background: var(--use); }
+.fresh[data-state=stale] .dot { background: var(--maybe); }
+.fresh-panel { position: absolute; right: 0; bottom: calc(100% + 6px); z-index: 7; width: min(320px, calc(100vw - 32px)); background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); padding: 12px; display: grid; gap: 10px; font-size: 13px; }
+.fresh-panel b { display: block; font-weight: 600; }
+.fresh-panel .when { font-size: 12px; color: var(--muted); }
+.fresh-panel p { margin: 2px 0 0; }
 /* ---------- our links ---------- */
 /* One card per row. Wide screens: card name above its link buttons on the left, sign-up bonus on the right. Phones: stacked. */
 .ours { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
@@ -389,6 +401,10 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
 
   <footer>
     <span>Not financial advice. Verify current terms with the issuer before applying.</span>
+    <details class="fresh" id="fresh">
+      <summary><i class="dot" aria-hidden="true"></i><span id="freshLabel">Checking data…</span></summary>
+      <div class="fresh-panel" id="freshPanel"></div>
+    </details>
     <button class="btn ghost small" id="lockBtn">Lock</button>
   </footer>
 </div>
@@ -878,6 +894,34 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
   darkQuery.addEventListener("change", paintThemeBtn);
   paintThemeBtn();
 
+  // ---------- data freshness: status.json is rewritten by every run of the daily bonus check and weekly fees & perks check ----------
+  const CHECKS = [["bonuses", "Sign-up bonuses", 36], ["perks", "Fees & perks", 8 * 24]];  // [key, label, hours before it's overdue]
+  const dayLabel = (d) => {
+    const days = Math.round((new Date().setHours(0, 0, 0, 0) - new Date(d).setHours(0, 0, 0, 0)) / 864e5);
+    return days === 0 ? "today" : days === 1 ? "yesterday" : d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  };
+  async function loadStatus() {
+    try {
+      const r = await fetch("status.json?t=" + Date.now(), { cache: "no-store" });
+      if (!r.ok) throw new Error(r.status);
+      const data = await r.json();
+      const rows = CHECKS.map(([key, label, maxHours]) => {
+        const c = (data && data[key]) || {}, at = new Date(c.checkedAt);
+        if (typeof c.checkedAt !== "string" || isNaN(at)) return { label, problem: "No check recorded yet" };
+        const problem = c.ok === false ? "Some sources couldn't be read" : Date.now() - at > maxHours * 3600e3 ? "Overdue" : "";
+        return { label, at, problem, summary: isText(c.summary, 300) ? c.summary.trim() : "" };
+      });
+      const latest = rows.filter((x) => x.at).sort((a, b) => b.at - a.at)[0];
+      $("fresh").dataset.state = rows.some((x) => x.problem) ? "stale" : "ok";
+      $("freshLabel").textContent = latest ? "Data checked " + dayLabel(latest.at) : "Data not checked yet";
+      $("freshPanel").innerHTML = rows.map((x) => `<div><b>${esc(x.label)}</b><span class="when">${x.at ? "Checked " + esc(x.at.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })) : ""}${x.at && x.problem ? " · " : ""}${esc(x.problem)}</span>${x.summary ? `<p>${esc(x.summary)}</p>` : ""}</div>`).join("");
+    } catch (_) {
+      $("fresh").dataset.state = "unknown"; $("freshLabel").textContent = "Data status unavailable";
+      $("freshPanel").innerHTML = "<p>Couldn't load when the data was last checked.</p>";
+    }
+  }
+  document.addEventListener("click", (e) => { if ($("fresh").open && !$("fresh").contains(e.target)) $("fresh").open = false; });
+
   // ---------- passcode gate: the rules only open sites/{passcode}/referrals, so a read there checks the passcode ----------
   let fsdb = null;
   function openApp() {
@@ -911,7 +955,7 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
   $("lockBtn").addEventListener("click", () => { store.del("ccr-pass"); $("lockCode").value = ""; showLock(""); });
   $("previewBtn").addEventListener("click", openApp);
 
-  renderQuiz(); update(); loadOffers();
+  renderQuiz(); update(); loadOffers(); loadStatus();
   if (!CONFIGURED) {
     showLock("Firebase isn't set up yet. Add your project config to index.html.");
     $("lockGo").disabled = true; $("previewBtn").hidden = false;

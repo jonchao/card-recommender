@@ -52,6 +52,6 @@ Two scheduled Claude routines keep the data current and push straight to `main` 
 - **Daily:** re-checks each card's public sign-up bonus and updates `offers.json` if anything changed.
 - **Weekly:** re-checks annual fees and perks for all 9 cards and updates `CARDS` / `PERKS` in `index.html` (and the "as of" notes), plus bonuses.
 
-Each run only commits when something actually changed, and the commit message lists what changed and the sources.
+Every run also rewrites **`status.json`** (when it ran, whether it could read its sources, and a one-line summary) and pushes it, so the footer's **Data checked** indicator shows the last check even when nothing changed. A green dot means both checks are current; amber means one is overdue (bonuses older than 36 hours, perks older than 8 days) or couldn't read its sources. When card data changes, the commit message lists what changed and the sources.
 
 Bank logos (`logos/chase.svg`, `logos/amex.svg`) come from Wikimedia Commons and are trademarks of their owners, used only to identify each card's issuer.

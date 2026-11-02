@@ -32,7 +32,7 @@ Everything lives in `index.html` (plus bank logos in `logos/`), with no build st
 
 ## Updating card data
 
-Card fees and perks are in the `CARDS` and `PERKS` arrays near the top of the script in `index.html`. Each perk's `offers` map is `{ cardId: [estimated $ per year if used, "short detail"] }`. Terms were last checked **Oct 2026**.
+Card fees and perks are in the `CARDS` and `PERKS` arrays near the top of the script in `index.html`. Each perk's `offers` map is `{ cardId: [estimated $ per year if used, "short detail"] }`. Terms were last checked **Nov 2026**.
 
 ## Our referral links & sign-up bonuses
 
